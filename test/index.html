@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <script src="processing.js"></script>            
+        <style>
+            .img-border {
+                fill:none;   
+                stroke-width: 3px;
+                stroke: blue;
+                stroke-linejoin: round;
+            }
+            canvas {
+                visibility: hidden;
+                position: fixed;
+                left: -9999999;
+            }
+        </style>
+    </head>
+
+    <body>
+        <img src="buzzer.png" id="original" class="display-image" onclick="alert('click image');" />
+        <div id="svg-container">
+
+        </div>
+        <a id="download" href="#" download>Download</button>
+        <canvas id="canvas"></canvas>
+    </body>
+</html>

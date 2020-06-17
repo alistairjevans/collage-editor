@@ -1,0 +1,66 @@
+Collage
+-------
+
+Hand-cut workshops
+
+- Pre-cut-out images
+- Board of existing images.
+- Student's dragging and moving images.
+- 13+
+- Restrict the input images.
+
+- Collection/Box of images - provided by Artist (named collection)
+- Participant - drags images.
+
+1. Artist creates set of SVGs.
+2. There is a valid set of SVGs for a given workshop (at the moment only one Workshop).
+3. Each Image can only be used once.
+4. Board size determined by physical size defined by Artist (not by physical size of Participant device).
+5. Board displayed 100% at start.
+6. Activities for a Participant:
+    - Move an Image from the Box onto the Board.
+    - Move an Image around on the Board.
+    - Bring forward 1 
+       - Bounding Rectangle of image.
+       - Adjust z-order to be 1 higher than the next image in the bounding rectangle.
+    - Push back 1
+    - Select an image.
+        - Need to have calculated the 'path' around the edge of the image to ensure that 
+          we can determine location correctly. Use SVG built-in path data for that.
+    - Put image back in the box.
+    - Rotate through 360 degrees.
+    - Zoom in
+    - Zoom out
+    - Pan
+    - Glue Down (image cannot be moved, no images underneath that image can be moved)
+    - Take a picture of their board.
+    - Change colour of background (use the colour picker control).
+7. Store the state of the board somewhere:
+    - Local storage?
+    - Cloud...?
+
+
+Implementation
+--------------
+
+- React SPA using React Components for Canvas to draw.
+   - Free hosting in the cloud (static app).
+
+- Workshop file:
+
+    {
+        name: 'Science Arts'
+        images: [
+            'image1.svg',
+            'image2.svg',
+            'image3.svg'
+        ]
+    } 
+
+- Images
+
+- Artist creates url for workshop (https://collage.keithbloodymary.com/workshop/[workshopname])
+- On load URL, create unique URL for board (https://collage.keithbloodymary.com/workshop/[workshopname]/sdkfgjhsdfjhs)
+- Put board in local storage (list of SVG images on the board, positions in 3D, and background colour).
+
+
