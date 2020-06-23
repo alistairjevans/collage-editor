@@ -91,7 +91,7 @@
   
 //////////////////////////////////////////  
 
-window.addEventListener("DOMContentLoaded", function() {
+document.getElementById("process").addEventListener("click", function() {
 
     var image = document.getElementById("original");
 
@@ -158,6 +158,7 @@ window.addEventListener("DOMContentLoaded", function() {
     var styleData = `clip-path: polygon(${clipPath});`;
 
     svg.setAttribute("style", styleData);
+    svg.setAttribute("onclick", "console.log('svg click');");
 
     var downloadButton = document.getElementById("download");
 

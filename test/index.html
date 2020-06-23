@@ -1,6 +1,5 @@
 <html>
-    <head>
-        <script src="processing.js"></script>            
+    <head>     
         <style>
             .img-border {
                 fill:none;   
@@ -17,11 +16,13 @@
     </head>
 
     <body>
-        <img src="buzzer.png" id="original" class="display-image" onclick="alert('click image');" />
+        <button id="process">Process</button>
+        <img src="image2-pixelgap.png" id="original" class="display-image" />
         <div id="svg-container">
 
         </div>
         <a id="download" href="#" download>Download</button>
         <canvas id="canvas"></canvas>
+        <script src="processing.js"></script>       
     </body>
 </html>
