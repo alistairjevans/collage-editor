@@ -28,8 +28,8 @@ const SelectionPolygon : FunctionComponent<{ selectedImage: ImageState }> = ({ s
     const classes = useStyles();
 
     return <svg className={classes.selectionBorderSvg} width={selectedImage.imageSize.width} height={selectedImage.imageSize.height} style={{
-        left: selectedImage.boundingBoxStart.x,
-        top: selectedImage.boundingBoxStart.y
+        left: selectedImage.boundingRect.left,
+        top: selectedImage.boundingRect.top
     }}>
         <polygon className={classes.selectionBorderPolygon} points={selectedImage.borderPoints}></polygon>
     </svg>;

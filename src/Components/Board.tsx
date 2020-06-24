@@ -1,4 +1,4 @@
-import React, { useCallback, FunctionComponent, useState, useEffect, useRef } from 'react';
+import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, Component, useImperativeHandle, PropsWithChildren } from 'react';
 import panzoom, { PanZoom } from 'panzoom';
 import { createUseStyles } from 'react-jss';
 
@@ -12,13 +12,93 @@ const useStyles = createUseStyles({
     }
 });
 
-const Board:FunctionComponent<{ active?: boolean, onScaleChanged?: (scale: number) => void }> = ({ active = true, onScaleChanged, children }) =>
+export interface BoardMethods {
+    resetZoom(): void;
+}
+
+export interface BoardProps {
+        active?: boolean;
+        onScaleChanged?: (scale: number) => void;
+        onBackgroundClicked?: () => void;
+        children?: React.ReactNode;
+}
+const sleep = (milliseconds: number) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+
+async function resetZoom(panZoom: PanZoom, container: HTMLElement)
+{
+    const parent = container.parentElement!;
+    const rectParent = parent.getBoundingClientRect();
+    const rectScene = container.getBoundingClientRect();
+
+    const xys = panZoom.getTransform();
+    const originWidth = rectScene.width / xys.scale;
+    const originHeight = rectScene.height / xys.scale;
+    const zoomX = (rectParent.width - 20) / originWidth;
+    const zoomY = (rectParent.height - 20) / originHeight;
+
+    let targetScale = zoomX < zoomY ? zoomX : zoomY;
+
+    //when target scale is the same as currently, we reset back to 100%, so it acts as toggle.
+    if (Math.abs(targetScale - xys.scale) < 0.005) {
+        //reset to 100%
+        targetScale = 1;
+    }
+
+    const targetWidth = originWidth * xys.scale;
+    const targetHeight = originHeight * xys.scale;
+    const newX = targetWidth > rectParent.width ? -(targetWidth / 2) + rectParent.width / 2 : (rectParent.width / 2) - (targetWidth / 2);
+    const newY = targetHeight > rectParent.height ? -(targetHeight / 2) + rectParent.height / 2 : (rectParent.height / 2) - (targetHeight / 2);
+
+    //we need to cancel current running animations
+    panZoom.pause();
+    panZoom.resume();
+
+    const xDiff = Math.abs(newX - xys.x);
+    const yDiff = Math.abs(newX - xys.x);
+    if (xDiff > 5 || yDiff > 5) {
+        //overything over 5px change will be animated
+        panZoom.moveBy(
+            newX - xys.x,
+            newY - xys.y,
+            true
+        );
+        await sleep(0.25);
+    } else {
+        panZoom.moveBy(
+            newX - xys.x,
+            newY - xys.y,
+            false
+        );
+    }
+
+    //correct way to zoom with center of graph as origin when scaled
+    panZoom.smoothZoomAbs(
+        xys.x + originWidth * xys.scale / 2,
+        xys.y + originHeight * xys.scale / 2,
+        targetScale,
+    );
+}
+
+const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ active = true, onScaleChanged, onBackgroundClicked, children }, ref) =>
 {
     const panZoomInstance = useRef<PanZoom | null>(null);
+    const panningNode = useRef<HTMLDivElement | null>(null);
     const [isPanZoomInitialised, setIsPanZoomInitialised] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+        resetZoom: () => {
+            if (panZoomInstance.current && panningNode.current)
+            {
+                resetZoom(panZoomInstance.current, panningNode.current);
+            }
+        }
+    }));
 
     const pannedRef = useCallback((node: HTMLDivElement) => {
 
+        panningNode.current = node;
         panZoomInstance.current = panzoom(node);
         setIsPanZoomInitialised(true);
 
@@ -57,11 +137,17 @@ const Board:FunctionComponent<{ active?: boolean, onScaleChanged?: (scale: numbe
 
     const classes = useStyles();
 
-    return <div className={classes.board}>
+    const handleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
+        if(ev.target === ev.currentTarget) {
+            onBackgroundClicked?.();
+        }
+    }
+
+    return <div className={classes.board} onClick={handleClick}>
         <div ref={pannedRef}>
             {children}
         </div>
     </div>
-}
+};
 
-export default Board;
+export default forwardRef(Board);

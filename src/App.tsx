@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Board from './Components/Board';
-import Image, { ImageState } from './Components/Image';
-import { createUseStyles } from 'react-jss';
+import Board, { BoardMethods } from './Components/Board';
+import Image, { ImageState, BoundingRect } from './Components/Image';
+import { IconButton } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import { loadWorkshop, WorkshopDetails } from './WorkshopLoader';
 import SelectionLayer from './Components/SelectionLayer';
+import { OptionBar } from './OptionBar';
 
-const useStyles = createUseStyles({
+const useStyles = makeStyles(theme => ({
   computeCanvas: {
     visibility: 'hidden',
     position: 'fixed',
@@ -19,22 +21,20 @@ const useStyles = createUseStyles({
     width: '100%',
     pointerEvents: 'none'
   }
-});
-
-interface WorkshopImageState {
-  url: string,
-  lastState?: ImageState
-}
+}));
 
 function App() {
 
   const classes = useStyles();
   const processingCanvasEl = useRef<HTMLCanvasElement>(null);
+  const boardMethods = useRef<BoardMethods>(null);
+  const cachedImageStates = useRef<(ImageState | null)[]>();
   const [workshopName, setWorkshopName] = useState("");
-  const [workshopImages, setWorkshopImages] = useState([] as WorkshopImageState[])
+  const [workshopImages, setWorkshopImages] = useState<string[]>([]);
   const [workshopUrl, setWorkshopUrl] = useState("http://localhost:3000/workshop/");
   const [boardMotionActive, setBoardMotionActive] = useState(true);
-  const [selectionImageData, setSelectionImageData] = useState<ImageState | null>(null);
+  const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
+  const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
   const [movingImageData, setMovingImageData] = useState<ImageState | null>(null);
   const [dragScale, setDragScale] = useState(1);
 
@@ -47,7 +47,10 @@ function App() {
         var workshopData = await loadWorkshop(workshopUrl);
 
         setWorkshopName(workshopData.name);
-        setWorkshopImages(workshopData.images.map<WorkshopImageState>(url => ({ url })));
+        setWorkshopImages(workshopData.images);
+
+        // Define a cached set of image states.
+        cachedImageStates.current = workshopData.images.map(url => ({ url: url, borderPoints: "", boundingRect: { left: 0, top: 0, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
       }
       catch(e)
       {
@@ -59,12 +62,27 @@ function App() {
     workshopLoad();
   }, [workshopUrl]);
 
+  const updateImageState = (state: ImageState) => {
+
+    var imgData = cachedImageStates.current;
+    
+    if (!imgData)
+    {
+      return;
+    }
+
+    // Find the item in the array and update it.
+    var idx = imgData.findIndex(img => img && img.url === state.url);
+
+    imgData[idx] = state;
+  }
+
   const handleImageEnter = (state: ImageState) => {    
-    setSelectionImageData(state);
+    setHoverImageData(state);
   }
 
   const handleImageLeave = (state: ImageState) => {
-    setSelectionImageData(null);
+    setHoverImageData(null);
   }
 
   const handleMove = (state: ImageState) => {
@@ -75,29 +93,116 @@ function App() {
     setBoardMotionActive(true);
     setMovingImageData(null);
 
-    if (selectionImageData && selectionImageData.url === state.url)
+    if (hoverImageData && hoverImageData.url === state.url)
     {
-      setSelectionImageData(state);
+      setHoverImageData(state);
     }
+
+    if (selectedImageData && selectedImageData.url == state.url)
+    {
+      setSelectedImageData(state);
+    }
+
+    updateImageState(state);
   }
 
+  const handleSelect = (state: ImageState) => {
+    setSelectedImageData(state);
+  }
+
+  const intersects = (r1: BoundingRect, r2: BoundingRect) =>
+  {
+    return !(r2.left > r1.right || 
+             r2.right < r1.left ||
+             r2.top > r1.bottom || 
+             r2.bottom < r1.top);
+  }
+
+  const handleImageUpOne = (image: ImageState | null) => {
+    if (!image) {
+      return;
+    }
+
+    var cachedImages = cachedImageStates.current;
+
+    if (!cachedImages) {
+      return;
+    }
+
+    // To move the image up one, we first find the position of the image in the array.
+    // Then we walk up the array, find the next element with an overlapping bounding box.
+    // If we don't find one, it goes at the top.
+    var cacheItemIdx = cachedImages.findIndex(cImg => cImg?.url == image.url);
+
+    if (cacheItemIdx === -1)
+    {
+      // Image is not in our cache? Not sure how that happens.
+      return;
+    }
+
+    let moveToAfter = -1;
+    var cacheItem = cachedImages[cacheItemIdx]!;
+
+    // Go through the set, starting from the next element.
+    for (let testItemIdx = cacheItemIdx + 1; testItemIdx < cachedImages.length; testItemIdx++)
+    {
+      var testItem = cachedImages[testItemIdx];
+
+      if(testItem && intersects(testItem?.boundingRect, cacheItem.boundingRect))
+      {
+        moveToAfter = testItemIdx;
+        break;
+      }
+    }
+
+    if (moveToAfter === -1)
+    {
+      // Already at the top, nothing to do.
+      return;
+    }
+
+    // Remove the item from one location.
+    cachedImages.splice(cacheItemIdx, 1);
+
+    // Now put it back in another one.
+    cachedImages.splice(moveToAfter + 1, 0, cacheItem);
+
+    // Now do the same thing for the image state list.
+    let newState = [...workshopImages];
+    var removed = newState.splice(cacheItemIdx, 1);
+    newState.splice(moveToAfter + 1, 0, removed[0]);
+
+    setWorkshopImages(newState);
+  }
+
+
+
+  const activeImageBorder = movingImageData ?? hoverImageData ?? selectedImageData;
+  const activeImageSelection = movingImageData ?? selectedImageData;
+
   return (
-    <div className="App">
-      <Board active={boardMotionActive} onScaleChanged={scale => setDragScale(scale)}>
-        {workshopImages.map(img => 
+    <div className="App">      
+      <Board ref={boardMethods} active={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
+        {workshopImages.map(url => 
           (<Image 
               canvas={processingCanvasEl.current!} 
-              url={img.url} 
-              key={img.url} 
+              url={url} 
+              key={url} 
               dragScale={dragScale}
+              onInitialStateAvailable={updateImageState}
               onMovingStart={() => setBoardMotionActive(false)}
               onMove={handleMove}
               onMouseEnter={handleImageEnter}
               onMouseLeave={handleImageLeave}
-              onMovingEnd={handleMoveEnd} />) )}
+              onMovingEnd={handleMoveEnd}
+              onSelect={handleSelect} />) )}
               
-        <SelectionLayer selectedImage={movingImageData ?? selectionImageData} key="_selection" />
+        <SelectionLayer selectedImage={activeImageBorder} key="_selection" />
       </Board>
+      <OptionBar activeImage={activeImageSelection} 
+                 onZoomToFit={() => { boardMethods.current?.resetZoom(); }}
+                 onUpOne={() => { handleImageUpOne(activeImageSelection); }}
+                 />
       <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
     </div>
   );
