@@ -1,24 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Board from './Components/Board';
-import Image from './Components/Image';
+import Image, { ImageState } from './Components/Image';
 import { createUseStyles } from 'react-jss';
 import { loadWorkshop, WorkshopDetails } from './WorkshopLoader';
+import SelectionLayer from './Components/SelectionLayer';
 
 const useStyles = createUseStyles({
   computeCanvas: {
     visibility: 'hidden',
     position: 'fixed',
     left: -9999
+  },
+  selectionLayer: {
+    position: "fixed",
+    left: 0,
+    top: 0,
+    height: '100%',
+    width: '100%',
+    pointerEvents: 'none'
   }
 });
+
+interface WorkshopImageState {
+  url: string,
+  lastState?: ImageState
+}
 
 function App() {
 
   const classes = useStyles();
   const processingCanvasEl = useRef<HTMLCanvasElement>(null);
+  const [workshopName, setWorkshopName] = useState("");
+  const [workshopImages, setWorkshopImages] = useState([] as WorkshopImageState[])
   const [workshopUrl, setWorkshopUrl] = useState("http://localhost:3000/workshop/");
-  const [workshopData, setWorkshopData] = useState<WorkshopDetails | null>(null);
   const [boardMotionActive, setBoardMotionActive] = useState(true);
+  const [selectionImageData, setSelectionImageData] = useState<ImageState | null>(null);
+  const [movingImageData, setMovingImageData] = useState<ImageState | null>(null);
   const [dragScale, setDragScale] = useState(1);
 
   useEffect(() => {
@@ -29,7 +46,8 @@ function App() {
         // Fixed for now.
         var workshopData = await loadWorkshop(workshopUrl);
 
-        setWorkshopData(workshopData);
+        setWorkshopName(workshopData.name);
+        setWorkshopImages(workshopData.images.map<WorkshopImageState>(url => ({ url })));
       }
       catch(e)
       {
@@ -41,17 +59,44 @@ function App() {
     workshopLoad();
   }, [workshopUrl]);
 
+  const handleImageEnter = (state: ImageState) => {    
+    setSelectionImageData(state);
+  }
+
+  const handleImageLeave = (state: ImageState) => {
+    setSelectionImageData(null);
+  }
+
+  const handleMove = (state: ImageState) => {
+    setMovingImageData(state);
+  }
+
+  const handleMoveEnd = (state: ImageState) => {
+    setBoardMotionActive(true);
+    setMovingImageData(null);
+
+    if (selectionImageData && selectionImageData.url === state.url)
+    {
+      setSelectionImageData(state);
+    }
+  }
+
   return (
     <div className="App">
       <Board active={boardMotionActive} onScaleChanged={scale => setDragScale(scale)}>
-        {workshopData?.images.map(url => 
+        {workshopImages.map(img => 
           (<Image 
               canvas={processingCanvasEl.current!} 
-              url={url} 
-              key={url} 
+              url={img.url} 
+              key={img.url} 
               dragScale={dragScale}
               onMovingStart={() => setBoardMotionActive(false)}
-              onMovingEnd={() => setBoardMotionActive(true)} />) )}
+              onMove={handleMove}
+              onMouseEnter={handleImageEnter}
+              onMouseLeave={handleImageLeave}
+              onMovingEnd={handleMoveEnd} />) )}
+              
+        <SelectionLayer selectedImage={movingImageData ?? selectionImageData} key="_selection" />
       </Board>
       <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
     </div>

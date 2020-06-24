@@ -1,4 +1,4 @@
-import React, { useCallback, FunctionComponent, useState, useEffect } from 'react';
+import React, { useCallback, FunctionComponent, useState, useEffect, useRef } from 'react';
 import panzoom, { PanZoom } from 'panzoom';
 import { createUseStyles } from 'react-jss';
 
@@ -14,12 +14,12 @@ const useStyles = createUseStyles({
 
 const Board:FunctionComponent<{ active?: boolean, onScaleChanged?: (scale: number) => void }> = ({ active = true, onScaleChanged, children }) =>
 {
-    const [panZoomInstance, setPanZoomInstance] = useState<PanZoom | null>(null);
+    const panZoomInstance = useRef<PanZoom | null>(null);
     const [isPanZoomInitialised, setIsPanZoomInitialised] = useState(false);
 
     const pannedRef = useCallback((node: HTMLDivElement) => {
 
-        setPanZoomInstance(panzoom(node));
+        panZoomInstance.current = panzoom(node);
         setIsPanZoomInitialised(true);
 
     }, []);
@@ -28,9 +28,10 @@ const Board:FunctionComponent<{ active?: boolean, onScaleChanged?: (scale: numbe
         
         if (onScaleChanged && isPanZoomInitialised)
         {
-            panZoomInstance!.on('zoom', (e) => 
+            const panZoom = panZoomInstance.current!;
+            panZoom.on('zoom', (e) => 
             {
-                onScaleChanged(panZoomInstance!.getTransform().scale);
+                onScaleChanged(panZoom.getTransform().scale);
             });
         }
 
@@ -38,18 +39,18 @@ const Board:FunctionComponent<{ active?: boolean, onScaleChanged?: (scale: numbe
 
     useEffect(() => {
 
-        if (!panZoomInstance)
+        if (!panZoomInstance.current)
         {
             return;
         }
 
         if (active)
         {
-            panZoomInstance.resume();
+            panZoomInstance.current!.resume();
         }
         else 
         {
-            panZoomInstance.pause();
+            panZoomInstance.current!.pause();
         }
 
     }, [active, panZoomInstance])
