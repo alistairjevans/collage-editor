@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Board, { BoardMethods } from './Components/Board';
 import Image, { ImageState, BoundingRect } from './Components/Image';
-import { IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { loadWorkshop, WorkshopDetails } from './WorkshopLoader';
+import { loadWorkshop } from './WorkshopLoader';
 import SelectionLayer from './Components/SelectionLayer';
 import { OptionBar } from './OptionBar';
 
@@ -23,6 +22,11 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+enum ZOrderOperation {
+  Forward,
+  Back
+}
+
 function App() {
 
   const classes = useStyles();
@@ -31,7 +35,7 @@ function App() {
   const cachedImageStates = useRef<(ImageState | null)[]>();
   const [workshopName, setWorkshopName] = useState("");
   const [workshopImages, setWorkshopImages] = useState<string[]>([]);
-  const [workshopUrl, setWorkshopUrl] = useState("http://localhost:3000/workshop/");
+  const [workshopUrl, setWorkshopUrl] = useState("http://192.168.1.86:3000/workshop/");
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -118,10 +122,7 @@ function App() {
              r2.bottom < r1.top);
   }
 
-  const handleImageUpOne = (image: ImageState | null) => {
-    if (!image) {
-      return;
-    }
+  const handleImageZOrderChange = (image: ImageState, newIdxFunc: (existingIdx: number, currentImageState: ImageState, allImages: (ImageState | null)[]) => number) => {
 
     var cachedImages = cachedImageStates.current;
 
@@ -140,42 +141,72 @@ function App() {
       return;
     }
 
-    let moveToAfter = -1;
     var cacheItem = cachedImages[cacheItemIdx]!;
 
-    // Go through the set, starting from the next element.
-    for (let testItemIdx = cacheItemIdx + 1; testItemIdx < cachedImages.length; testItemIdx++)
+    let moveToIdx = newIdxFunc(cacheItemIdx, cacheItem, cachedImages);
+    
+    if (moveToIdx == cacheItemIdx)
     {
-      var testItem = cachedImages[testItemIdx];
-
-      if(testItem && intersects(testItem?.boundingRect, cacheItem.boundingRect))
-      {
-        moveToAfter = testItemIdx;
-        break;
-      }
-    }
-
-    if (moveToAfter === -1)
-    {
-      // Already at the top, nothing to do.
+      // Nothing to do.
       return;
     }
 
     // Remove the item from one location.
     cachedImages.splice(cacheItemIdx, 1);
 
+    if (moveToIdx < cacheItemIdx)
+    {
+      moveToIdx++;
+    }
+    else 
+    {
+      moveToIdx--;
+    }
+
     // Now put it back in another one.
-    cachedImages.splice(moveToAfter + 1, 0, cacheItem);
+    cachedImages.splice(moveToIdx, 0, cacheItem);
 
     // Now do the same thing for the image state list.
     let newState = [...workshopImages];
     var removed = newState.splice(cacheItemIdx, 1);
-    newState.splice(moveToAfter + 1, 0, removed[0]);
+    newState.splice(moveToIdx, 0, removed[0]);
 
     setWorkshopImages(newState);
   }
 
+  const forwardZOrder = (existingIdx: number, currentImageState: ImageState, allImages: (ImageState | null)[]) => {
+    
+    // Go through the set, starting from the next element.
+    for (let testItemIdx = existingIdx + 1; testItemIdx < allImages.length; testItemIdx++)
+    {
+      var testItem = allImages[testItemIdx];
 
+      if(testItem && intersects(testItem?.boundingRect, currentImageState.boundingRect))
+      {
+        return testItemIdx + 1;
+      }
+    }
+
+    // Already at the top, nothing to do.
+    return existingIdx;
+  }
+  
+  const backZOrder = (existingIdx: number, currentImageState: ImageState, allImages: (ImageState | null)[]) => {
+    
+    // Go through the set, starting from the next element.
+    for (let testItemIdx = existingIdx - 1; testItemIdx >= 0; testItemIdx--)
+    {
+      var testItem = allImages[testItemIdx];
+
+      if(testItem && intersects(testItem?.boundingRect, currentImageState.boundingRect))
+      {
+        return testItemIdx - 1;
+      }
+    }
+
+    // Already at the bottom, nothing to do.
+    return existingIdx;
+  }
 
   const activeImageBorder = movingImageData ?? hoverImageData ?? selectedImageData;
   const activeImageSelection = movingImageData ?? selectedImageData;
@@ -201,7 +232,8 @@ function App() {
       </Board>
       <OptionBar activeImage={activeImageSelection} 
                  onZoomToFit={() => { boardMethods.current?.resetZoom(); }}
-                 onUpOne={() => { handleImageUpOne(activeImageSelection); }}
+                 onUpOne={() => { handleImageZOrderChange(activeImageSelection!, forwardZOrder); }}
+                 onDownOne={() => { handleImageZOrderChange(activeImageSelection!, backZOrder) }}
                  />
       <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
     </div>

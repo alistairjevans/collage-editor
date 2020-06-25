@@ -2,6 +2,9 @@
     "name": "Test Workshop",
     "images": [
         "chair.png",
-        "horse.png"
+        "horse.png",
+        "frame.png",
+        "torso.png",
+        "athlete.png"
     ]
 }

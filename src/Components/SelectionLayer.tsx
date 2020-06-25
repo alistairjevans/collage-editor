@@ -18,7 +18,7 @@ const useStyles = createUseStyles({
   selectionBorderPolygon: {
     fill: 'none',
     strokeWidth: '3px',
-    stroke: 'blue',
+    stroke: 'pink',
     strokeLinejoin: 'round'
   },
 });

@@ -43,7 +43,7 @@ export const  getImageData = async (imageUrl: string, workingCanvas: HTMLCanvasE
     const defineNonTransparent: GridDetect = function (x, y)
     {
         var a=pixelData[(y*canvasWidth+x)*4+3];
-        return(a>20);
+        return(a>99);
     }
 
     var points = contour(defineNonTransparent);
