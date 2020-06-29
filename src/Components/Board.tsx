@@ -1,5 +1,5 @@
 import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, Component, useImperativeHandle, PropsWithChildren } from 'react';
-import panzoom, { PanZoom } from 'panzoom';
+import panzoom, { Transform, PanZoom } from 'panzoom';
 import { createUseStyles } from 'react-jss';
 
 const useStyles = createUseStyles({
@@ -17,7 +17,7 @@ export interface BoardMethods {
 }
 
 export interface BoardProps {
-        active?: boolean;
+        motionActive?: boolean;
         onScaleChanged?: (scale: number) => void;
         onBackgroundClicked?: () => void;
         children?: React.ReactNode;
@@ -81,9 +81,10 @@ async function resetZoom(panZoom: PanZoom, container: HTMLElement)
     );
 }
 
-const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ active = true, onScaleChanged, onBackgroundClicked, children }, ref) =>
+const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive = true, onScaleChanged, onBackgroundClicked, children }, ref) =>
 {
     const panZoomInstance = useRef<PanZoom | null>(null);
+    const mouseDownTransform = useRef<Transform | null>(null);
     const panningNode = useRef<HTMLDivElement | null>(null);
     const [isPanZoomInitialised, setIsPanZoomInitialised] = useState(false);
 
@@ -99,7 +100,13 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ active = true
     const pannedRef = useCallback((node: HTMLDivElement) => {
 
         panningNode.current = node;
-        panZoomInstance.current = panzoom(node);
+        panZoomInstance.current = panzoom(node, {
+            onTouch: (ev) => {
+                var transform = panZoomInstance.current!.getTransform();
+                mouseDownTransform.current = {...transform};
+            },
+            disableKeyboardInteraction: true
+        });
         setIsPanZoomInitialised(true);
 
     }, []);
@@ -124,7 +131,7 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ active = true
             return;
         }
 
-        if (active)
+        if (motionActive)
         {
             panZoomInstance.current!.resume();
         }
@@ -133,17 +140,30 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ active = true
             panZoomInstance.current!.pause();
         }
 
-    }, [active, panZoomInstance])
+    }, [motionActive, panZoomInstance])
 
     const classes = useStyles();
 
-    const handleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
-        if(ev.target === ev.currentTarget) {
-            onBackgroundClicked?.();
+    const handleMouseDown = (ev: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
+        
+        var transform = panZoomInstance.current!.getTransform();
+        mouseDownTransform.current = {...transform};
+        
+    }
+
+    const handleMouseUp = (ev: React.TouchEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) => {
+        if(ev.target === ev.currentTarget) {            
+            var startTransform = mouseDownTransform.current!;            
+            var currentTransform = panZoomInstance.current!.getTransform();
+
+            if (startTransform && currentTransform && startTransform.x === currentTransform.x && startTransform.y === currentTransform.y && startTransform.scale == currentTransform.scale)
+            {
+                onBackgroundClicked?.();
+            }
         }
     }
 
-    return <div className={classes.board} onClick={handleClick}>
+    return <div className={classes.board} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
         <div ref={pannedRef}>
             {children}
         </div>

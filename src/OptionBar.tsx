@@ -1,10 +1,11 @@
 import React, { FunctionComponent, useState } from 'react';
 import { ImageState, AvailableWorkshopImage } from './CommonTypes';
-import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, Drawer, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, Drawer, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide } from '@material-ui/core';
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
 import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
 import PhotoAlbumIcon from '@material-ui/icons/PhotoAlbum';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery'; 
 
@@ -13,7 +14,8 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
     bar: {
         top: 'auto;',
         bottom: 0,
-        boxShadow: "0px -4px 5px 0px rgba(0, 0, 0, 0.21)"
+        boxShadow: "0px -4px 5px 0px rgba(0, 0, 0, 0.21)",
+        overflow: 'hidden'
     },
 
     divider: {
@@ -30,6 +32,23 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
 
     boxImage: {
         //height: '200px'
+    },
+    
+    grow: {
+        flexGrow: 1
+    },
+
+    swappableSection: {
+        position: 'relative',
+        alignSelf: 'stretch',
+        alignItems: 'center',
+        display: 'flex',
+        flexGrow: 1
+    },
+
+    swappableSet: {
+        position: 'absolute',
+        left: 0
     },
 
     imgBoundingBox: {
@@ -85,8 +104,9 @@ export const OptionBar: FunctionComponent<{
     onZoomToFit?: () => void,
     onUpOne?: () => void,
     onDownOne?: () => void,
+    onRemoveImage?: () => void,
     onUseImage?: (url : string) => void,
-}> = ({ activeImage, allImages, onZoomToFit, onUpOne, onDownOne, onUseImage }) => {
+}> = ({ activeImage, allImages, onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage }) => {
 
   const classes = useStyles();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -123,15 +143,32 @@ export const OptionBar: FunctionComponent<{
                 {/* <IconButton edge="end" color="inherit" onClick={onZoomToFit}>
                     <CropFreeRoundedIcon />
                 </IconButton> */}
-                <IconButton edge="end" color="inherit" disabled={activeImage === null} onClick={onUpOne}>
-                    <ArrowUpwardRoundedIcon />
-                </IconButton>
-                <IconButton edge="end" color="inherit" disabled={activeImage === null} onClick={onDownOne}>
-                    <ArrowDownwardRoundedIcon />
-                </IconButton>
-                <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)}>
-                    <PhotoAlbumIcon />
-                </IconButton>
+                <div className={classes.swappableSection}>
+                    <div className={classes.swappableSet}>
+                        <Slide direction="up" in={activeImage !== null} mountOnEnter unmountOnExit>
+                            <div>
+                                <IconButton edge="end" color="inherit" onClick={onUpOne}>
+                                    <ArrowUpwardRoundedIcon />
+                                </IconButton>
+                                <IconButton edge="end" color="inherit" onClick={onDownOne}>
+                                    <ArrowDownwardRoundedIcon />
+                                </IconButton>
+                                <IconButton edge="end" color="inherit" onClick={onRemoveImage}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </div>
+                        </Slide>
+                    </div>
+                    <div className={classes.swappableSet}>
+                        <Slide direction="down" in={activeImage === null} mountOnEnter unmountOnExit>
+                            <div>
+                                <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)}>
+                                    <PhotoAlbumIcon />
+                                </IconButton>
+                            </div>
+                        </Slide>
+                    </div>
+                </div>
             </Toolbar>
         </AppBar>
         <SwipeableDrawer open={drawerOpen}  anchor="bottom" onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
@@ -139,7 +176,7 @@ export const OptionBar: FunctionComponent<{
             <div className={classes.boxDrawer}>
                 <GridList className={classes.boxGrid} cellHeight="auto" cols={isBig ? 6 : 2} spacing={10}>
                     {allImages.filter(img => !img.inUse).map(img => (
-                            <GridListTile key={img.url} cols={1} >
+                            <GridListTile key={img.url} cols={1}>
                                 <Box className={classes.imgBoundingBox} style={{backgroundImage: `url(${img.url})`}} border={2} onDoubleClick={() => setImageStateAndCloseDrawer(img.url)}>                                    
                                     <GridListTileBar
                                     titlePosition="top"

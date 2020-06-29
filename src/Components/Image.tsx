@@ -4,13 +4,13 @@ import Draggable, { DraggableData } from 'react-draggable';
 import { getImageData, getClipPath, getBoundingPolygonPath } from "../ImageProcessing";
 import { ImageState, ImageInitData } from "../CommonTypes";
 import { createUseStyles } from 'react-jss';
-import { relative } from "path";
 
 const useStyles = createUseStyles({
     
     container: {
         display: 'inline-block',
         position: 'absolute',
+        cursor: 'pointer'
     },
 
     svgEntity: {

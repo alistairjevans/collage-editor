@@ -258,8 +258,11 @@ function App() {
     var item = newOrderedImages[orderedIdx];
     item.inUse = use;
     
-    newOrderedImages.splice(orderedIdx, 1);
-    newOrderedImages.push(item);
+    if (use)
+    {
+      newOrderedImages.splice(orderedIdx, 1);
+      newOrderedImages.push(item);
+    }
 
     setOrderedImages(newOrderedImages);
 
@@ -268,9 +271,16 @@ function App() {
     var currentState = imgStates[orderedIdx];
     currentState!.inUse = use;
 
-    imgStates.splice(orderedIdx, 1);
-    imgStates.push(currentState);
-  };
+    if (use)
+    {
+      imgStates.splice(orderedIdx, 1);
+      imgStates.push(currentState);
+    }
+    else 
+    {
+      setSelectedImageData(null);
+    }
+  };  
 
   const activeImageBorder = movingImageData ?? hoverImageData ?? selectedImageData;
   const activeImageSelection = movingImageData ?? selectedImageData;
@@ -278,7 +288,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <div className="App">      
-        <Board ref={boardMethods} active={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
+        <Board ref={boardMethods} motionActive={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
           {orderedImages.filter(img => img.inUse).map(img => 
             (<Image 
                 canvas={processingCanvasEl.current!} 
@@ -299,7 +309,8 @@ function App() {
                   onZoomToFit={() => boardMethods.current?.resetZoom()}
                   onUpOne={() => handleImageZOrderChange(activeImageSelection!, forwardZOrder)}
                   onDownOne={() => handleImageZOrderChange(activeImageSelection!, backZOrder)}
-                  onUseImage={url => toggleUseImage(url, true)}
+                  onRemoveImage={() => toggleUseImage(activeImageSelection!.url, false)}
+                  onUseImage={url => toggleUseImage(url, true)}                  
                   />
         <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
       </div>  
