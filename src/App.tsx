@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Board, { BoardMethods } from './Components/Board';
 import Image from './Components/Image';
-import { ImageState, BoundingRect, AvailableWorkshopImage } from './CommonTypes';
+import { ImageState, BoundingRect, AvailableWorkshopImage, SavedWorkshopState } from './CommonTypes';
 import { makeStyles, createMuiTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/styles';
 import { loadWorkshop } from './WorkshopLoader';
@@ -40,9 +40,10 @@ function App() {
   const boardMethods = useRef<BoardMethods>(null);
   const cachedImageStates = useRef<(ImageState | null)[]>();
   const [workshopName, setWorkshopName] = useState("");
+  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
   const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
-  const [workshopUrl, setWorkshopUrl] = useState("http://localhost:3000/workshop/");
+  const [workshopUrl, setWorkshopUrl] = useState("http://192.168.1.86:3000/workshop/");
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -59,16 +60,48 @@ function App() {
 
         setWorkshopName(workshopData.name);
 
+        // Look for any existing workshop data.
+        var existingData = localStorage.getItem(`data_${workshopUrl}`);
+
         var loadedImages = workshopData.images.map(url => ({
           url,
-          inUse: false
+          inUse: false,
+          initialX: 0,
+          initialY: 0
         }));
+
+        if (existingData)
+        {
+          var parsedData = JSON.parse(existingData) as SavedWorkshopState;
+
+          if (parsedData)
+          {
+            // Use our loaded images.
+            setBackgroundColor(parsedData.backgroundColor);
+
+            loadedImages = parsedData.images.map(cachedImg => ({
+              inUse: cachedImg.inUse,
+              url: cachedImg.url,
+              initialX: cachedImg.x,
+              initialY: cachedImg.y
+            }));
+
+            // Make sure we have all the images.
+            workshopData.images.forEach(additionalUrl => {
+              if (!loadedImages.find(v => v.url === additionalUrl))
+              {
+                // Add the image.
+                loadedImages.push({ url: additionalUrl, inUse: false, initialX: 0, initialY: 0 });
+              }
+            });
+          }
+        }
 
         setWorkshopImages(loadedImages);
         setOrderedImages(loadedImages);
 
         // Define a cached set of image states.
-        cachedImageStates.current = workshopData.images.map(url => ({ url: url, inUse: false, borderPoints: "", boundingRect: { left: 0, top: 0, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
+        cachedImageStates.current = loadedImages.map(img => ({ url: img.url, inUse: img.inUse, borderPoints: "", boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
       }
       catch(e)
       {
@@ -79,6 +112,28 @@ function App() {
 
     workshopLoad();
   }, [workshopUrl]);
+
+  const saveState = () =>
+  {
+    if (!workshopUrl || !cachedImageStates.current)
+    {
+      return;
+    }
+
+    // Save to local storage.
+    const data : SavedWorkshopState = { 
+      backgroundColor,
+      images: cachedImageStates.current!.map((img) => ({ url: img!.url, inUse: img!.inUse, x: img!.boundingRect.left, y: img!.boundingRect.top }))
+    };
+
+    localStorage.setItem(`data_${workshopUrl}`, JSON.stringify(data));
+  }
+
+  useEffect(() => {
+
+    saveState();
+    
+  }, [backgroundColor, orderedImages, workshopUrl, saveState]);
 
   const updateImageState = (state: ImageState) => {
 
@@ -122,7 +177,9 @@ function App() {
       setSelectedImageData(state);
     }
 
-    updateImageState(state);
+    updateImageState(state);    
+
+    saveState();
   }
 
   const handleSelect = (state: ImageState) => {
@@ -281,19 +338,17 @@ function App() {
       setSelectedImageData(null);
     }
   };  
-
-  const activeImageBorder = movingImageData ?? hoverImageData ?? selectedImageData;
-  const activeImageSelection = movingImageData ?? selectedImageData;
-
   return (
     <ThemeProvider theme={theme}>
       <div className="App">      
-        <Board ref={boardMethods} motionActive={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
+        <Board ref={boardMethods} backgroundColor={backgroundColor} motionActive={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
           {orderedImages.filter(img => img.inUse).map(img => 
             (<Image 
                 canvas={processingCanvasEl.current!} 
                 url={img.url}
                 key={img.url}
+                initialX={img.initialX}
+                initialY={img.initialY}
                 dragScale={dragScale}
                 onInitialStateAvailable={updateImageState}
                 onMovingStart={() => setBoardMotionActive(false)}
@@ -302,15 +357,18 @@ function App() {
                 onMouseLeave={handleImageLeave}
                 onMovingEnd={handleMoveEnd}
                 onSelect={handleSelect} />) )}              
-          <SelectionLayer selectedImage={activeImageBorder} key="_selection" />
+          <SelectionLayer hoverImage={hoverImageData} selectedImage={movingImageData ?? selectedImageData} key="_selection" />
         </Board>
-        <OptionBar activeImage={activeImageSelection}
+        <OptionBar activeImage={selectedImageData}
+                  boardBackgroundColor={backgroundColor}
+                  workshopName={workshopName}
                   allImages={workshopImages}
                   onZoomToFit={() => boardMethods.current?.resetZoom()}
-                  onUpOne={() => handleImageZOrderChange(activeImageSelection!, forwardZOrder)}
-                  onDownOne={() => handleImageZOrderChange(activeImageSelection!, backZOrder)}
-                  onRemoveImage={() => toggleUseImage(activeImageSelection!.url, false)}
-                  onUseImage={url => toggleUseImage(url, true)}                  
+                  onUpOne={() => handleImageZOrderChange(selectedImageData!, forwardZOrder)}
+                  onDownOne={() => handleImageZOrderChange(selectedImageData!, backZOrder)}
+                  onRemoveImage={() => toggleUseImage(selectedImageData!.url, false)}
+                  onUseImage={url => toggleUseImage(url, true)}
+                  onBackgroundColorChange={color => setBackgroundColor(color)}            
                   />
         <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
       </div>  

@@ -1,6 +1,7 @@
-import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, Component, useImperativeHandle, PropsWithChildren } from 'react';
+import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, Component, useImperativeHandle, PropsWithChildren, StyleHTMLAttributes } from 'react';
 import panzoom, { Transform, PanZoom } from 'panzoom';
 import { createUseStyles } from 'react-jss';
+import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 const useStyles = createUseStyles({
     board: {
@@ -18,6 +19,7 @@ export interface BoardMethods {
 
 export interface BoardProps {
         motionActive?: boolean;
+        backgroundColor?: string;
         onScaleChanged?: (scale: number) => void;
         onBackgroundClicked?: () => void;
         children?: React.ReactNode;
@@ -81,7 +83,7 @@ async function resetZoom(panZoom: PanZoom, container: HTMLElement)
     );
 }
 
-const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive = true, onScaleChanged, onBackgroundClicked, children }, ref) =>
+const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive = true, backgroundColor = "#ffffff", onScaleChanged, onBackgroundClicked, children }, ref) =>
 {
     const panZoomInstance = useRef<PanZoom | null>(null);
     const mouseDownTransform = useRef<Transform | null>(null);
@@ -163,7 +165,14 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive 
         }
     }
 
-    return <div className={classes.board} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
+    const boardStyle : CSSProperties = {};
+
+    if (backgroundColor)
+    {
+        boardStyle.backgroundColor = backgroundColor;
+    }
+
+    return <div className={classes.board} style={boardStyle} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
         <div ref={pannedRef}>
             {children}
         </div>

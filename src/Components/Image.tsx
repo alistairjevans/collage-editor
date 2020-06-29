@@ -22,6 +22,8 @@ const useStyles = createUseStyles({
 
 export interface ImageProps {
     url: string,
+    initialX?: number,
+    initialY?: number,
     canvas: HTMLCanvasElement,
     onInitialStateAvailable?: (img: ImageState) => void,
     onMovingStart?: (img: ImageState) => void,
@@ -36,6 +38,7 @@ export interface ImageProps {
 const Image : FunctionComponent<ImageProps> = ({
      url, 
      canvas, 
+     initialX = 0, initialY = 0,
      onInitialStateAvailable,
      onMovingStart, onMovingEnd, onMove, 
      onMouseEnter, onMouseLeave, 
@@ -47,7 +50,7 @@ const Image : FunctionComponent<ImageProps> = ({
     const [ imgProps, setImgProps ] = useState({ width: 0, height: 0, href: "" } as React.SVGAttributes<SVGImageElement>);
     const [ containerProps, setContainerProps] = useState({} as React.HTMLAttributes<HTMLDivElement>);
     const imageInitData = useRef(null as ImageInitData | null);
-    const lastKnownPosition = useRef({ left: 0, right: 0, top: 0, bottom: 0 });
+    const lastKnownPosition = useRef({ left: initialX, right: 0, top: initialY, bottom: 0 });
     
     useEffect(() => {
         
@@ -96,7 +99,7 @@ const Image : FunctionComponent<ImageProps> = ({
         return {
             ...imageInitData.current!,
             inUse: true,
-            boundingRect: { left: dragData.x, top: dragData.y, right: dragData.x + size.width, bottom: dragData.y + size.height }
+            boundingRect: { left: initialX + dragData.x, top: initialY + dragData.y, right: dragData.x + size.width, bottom: dragData.y + size.height }
         }
     }
 
@@ -144,6 +147,7 @@ const Image : FunctionComponent<ImageProps> = ({
 
     return <Draggable 
                 scale={dragScale} 
+                positionOffset={{x: initialX, y: initialY}}
                 onStart={(_, data) => moveStartHandler(data)}
                 onStop={(_, data) => moveEndHandler(data)} 
                 onDrag={(_, data) => moveHandler(data)}

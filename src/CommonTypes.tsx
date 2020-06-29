@@ -1,8 +1,19 @@
 
+export interface SavedWorkshopState {
+    backgroundColor: string,
+    images: {
+        url: string,
+        inUse: boolean, 
+        x: number, 
+        y: number 
+    }[]
+}
 
 export interface AvailableWorkshopImage {
     url: string;
     inUse: boolean;
+    initialX: number,
+    initialY: number
 }
 
 export interface ImageInitData

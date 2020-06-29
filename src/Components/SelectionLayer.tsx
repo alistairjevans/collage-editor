@@ -1,8 +1,9 @@
 import React, { FunctionComponent } from 'react';
 import { ImageState } from '../CommonTypes';
-import { createUseStyles } from 'react-jss';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
+import SelectionPolygon from './SelectionPolygon';
 
-const useStyles = createUseStyles({
+const useStyles = makeStyles(() => ({
   selectionLayer: {
     position: "fixed",
     left: 0,
@@ -10,39 +11,20 @@ const useStyles = createUseStyles({
     height: '100%',
     width: '100%',
     pointerEvents: 'none'
-  },
-  selectionBorderSvg: {
-    position: 'absolute',
-    pointerEvents: 'none'   
-  },
-  selectionBorderPolygon: {
-    fill: 'none',
-    strokeWidth: '3px',
-    stroke: 'pink',
-    strokeLinejoin: 'round'
-  },
-});
+  }
+}));
 
-const SelectionPolygon : FunctionComponent<{ selectedImage: ImageState }> = ({ selectedImage }) =>
+const SelectionLayer : FunctionComponent<{ hoverImage: ImageState | null, selectedImage: ImageState | null }> = ({ hoverImage, selectedImage }) =>
 {
     const classes = useStyles();
 
-    return <svg className={classes.selectionBorderSvg} width={selectedImage.imageSize.width} height={selectedImage.imageSize.height} style={{
-        left: selectedImage.boundingRect.left,
-        top: selectedImage.boundingRect.top
-    }}>
-        <polygon className={classes.selectionBorderPolygon} points={selectedImage.borderPoints}></polygon>
-    </svg>;
-}
+    const selectionPolygon = selectedImage ? <SelectionPolygon color="primary" img={selectedImage} /> : null;
 
-const SelectionLayer : FunctionComponent<{ selectedImage: ImageState | null }> = ({ selectedImage }) =>
-{
-    const classes = useStyles();
-
-    const selectionPolygon = selectedImage ? <SelectionPolygon selectedImage={selectedImage} /> : null;
+    const hoverPolygon = hoverImage && hoverImage.url !== selectedImage?.url ? <SelectionPolygon color="secondary" img={hoverImage} /> : null;
 
     return <div className={classes.selectionLayer}>
         {selectionPolygon}
+        {hoverPolygon}
     </div>;
 }
 

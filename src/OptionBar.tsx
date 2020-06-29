@@ -1,10 +1,11 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useState, useRef } from 'react';
 import { ImageState, AvailableWorkshopImage } from './CommonTypes';
 import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, Drawer, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide } from '@material-ui/core';
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
 import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
 import PhotoAlbumIcon from '@material-ui/icons/PhotoAlbum';
+import PaletteIcon from '@material-ui/icons/Palette';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery'; 
@@ -16,6 +17,10 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
         bottom: 0,
         boxShadow: "0px -4px 5px 0px rgba(0, 0, 0, 0.21)",
         overflow: 'hidden'
+    },
+
+    barTitle: {
+        paddingRight: '10px'
     },
 
     divider: {
@@ -92,26 +97,31 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
         userSelect: 'none'
     },
 
-    boxHeadingBackground: {
-        backgroundColor: palette.primary.main
+    colorPicker: {
+        visibility: 'hidden',
+        width: '0px'
     }
 
 }));
 
 export const OptionBar: FunctionComponent<{ 
     activeImage?: ImageState | null,
+    workshopName?: string,
+    boardBackgroundColor?: string
     allImages: AvailableWorkshopImage[],
     onZoomToFit?: () => void,
     onUpOne?: () => void,
     onDownOne?: () => void,
     onRemoveImage?: () => void,
     onUseImage?: (url : string) => void,
-}> = ({ activeImage, allImages, onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage }) => {
+    onBackgroundColorChange?: (color: string) => void,
+}> = ({ activeImage, workshopName, boardBackgroundColor, allImages, onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage, onBackgroundColorChange }) => {
 
   const classes = useStyles();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
   const isBig = useMediaQuery(theme.breakpoints.up("sm"));
+  const colorPicker = useRef<HTMLInputElement>(null);
 
   const toggleDrawer = (open: boolean) => (
     event: React.KeyboardEvent | React.MouseEvent,
@@ -132,13 +142,38 @@ export const OptionBar: FunctionComponent<{
     setDrawerOpen(false);
   }
 
+  const promptForColor = () => {
+    colorPicker.current?.click();
+  }
+
+  let heading: React.ReactNode;
+
+  if (workshopName)
+  {
+    if (isBig)
+    {
+        heading = <React.Fragment>
+            <Typography variant="h6">{workshopName}</Typography>
+            <Typography variant="subtitle2">CollageIT</Typography>
+        </React.Fragment>;        
+    }
+    else 
+    {
+        heading = <Typography variant="subtitle2">{workshopName}</Typography>;
+    }
+  }
+  else
+  {
+    heading = <Typography variant="h6">CollageIT</Typography>;
+  }
+
   return <React.Fragment>
         <CssBaseline />
         <AppBar className={classes.bar} color="primary" elevation={16} position="fixed">
             <Toolbar>
-                <Typography variant="h6">
-                    CollageIt
-                </Typography>
+                <div className={classes.barTitle}>
+                    {heading}               
+                </div>
                 <Divider className={classes.divider} orientation="vertical" flexItem />
                 {/* <IconButton edge="end" color="inherit" onClick={onZoomToFit}>
                     <CropFreeRoundedIcon />
@@ -165,14 +200,20 @@ export const OptionBar: FunctionComponent<{
                                 <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)}>
                                     <PhotoAlbumIcon />
                                 </IconButton>
+                                <IconButton edge="end" color="inherit" onClick={promptForColor}>
+                                    <PaletteIcon />
+                                </IconButton>
+                                <input className={classes.colorPicker} type="color" ref={colorPicker} value={boardBackgroundColor ?? "#FFFFFF"} onChange={ev => onBackgroundColorChange?.(ev.target.value)}></input>
                             </div>
                         </Slide>
                     </div>
                 </div>
             </Toolbar>
-        </AppBar>
+        </AppBar>        
         <SwipeableDrawer open={drawerOpen}  anchor="bottom" onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
-            <Toolbar className={classes.boxHeadingBackground}><Typography variant="h4"><PhotoAlbumIcon /> Box</Typography></Toolbar>
+            <AppBar position="static" color="primary">
+                <Toolbar><Typography variant="h4"><PhotoAlbumIcon /> Box</Typography></Toolbar>
+            </AppBar>
             <div className={classes.boxDrawer}>
                 <GridList className={classes.boxGrid} cellHeight="auto" cols={isBig ? 6 : 2} spacing={10}>
                     {allImages.filter(img => !img.inUse).map(img => (
