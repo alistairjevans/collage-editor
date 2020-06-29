@@ -2,6 +2,7 @@ import { FunctionComponent, useState, useEffect, useRef, useCallback } from "rea
 import React from 'react';
 import Draggable, { DraggableData } from 'react-draggable';
 import { getImageData, getClipPath, getBoundingPolygonPath } from "../ImageProcessing";
+import { ImageState, ImageInitData } from "../CommonTypes";
 import { createUseStyles } from 'react-jss';
 import { relative } from "path";
 
@@ -30,25 +31,6 @@ export interface ImageProps {
     onMouseLeave?: (img: ImageState) => void,
     onSelect?: (img: ImageState) => void,
     dragScale?: number
-}
-
-export interface ImageInitData
-{
-    url: string,
-    imageSize: { width: number, height : number }
-    borderPoints: string
-}
-
-export interface ImageState extends ImageInitData
-{
-    boundingRect: BoundingRect
-}
-
-export interface BoundingRect { 
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
 }
 
 const Image : FunctionComponent<ImageProps> = ({
@@ -99,6 +81,7 @@ const Image : FunctionComponent<ImageProps> = ({
 
             onInitialStateAvailable?.({
                 ...imageInitData.current!,
+                inUse: true,
                 boundingRect: lastKnownPosition.current
             });
         }
@@ -112,6 +95,7 @@ const Image : FunctionComponent<ImageProps> = ({
 
         return {
             ...imageInitData.current!,
+            inUse: true,
             boundingRect: { left: dragData.x, top: dragData.y, right: dragData.x + size.width, bottom: dragData.y + size.height }
         }
     }
@@ -137,6 +121,7 @@ const Image : FunctionComponent<ImageProps> = ({
     const enterHandler = () => {
         onMouseEnter?.({
             ...imageInitData.current!,
+            inUse: true,
             boundingRect: lastKnownPosition.current
         });
     }
@@ -144,6 +129,7 @@ const Image : FunctionComponent<ImageProps> = ({
     const leaveHandler = () => {
         onMouseLeave?.({
             ...imageInitData.current!,
+            inUse: true,
             boundingRect: lastKnownPosition.current
         });
     }
@@ -151,6 +137,7 @@ const Image : FunctionComponent<ImageProps> = ({
     const selectedHandler = () => {
         onSelect?.({            
             ...imageInitData.current!,
+            inUse: true,
             boundingRect: lastKnownPosition.current
         })
     }

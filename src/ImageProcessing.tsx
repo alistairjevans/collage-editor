@@ -1,5 +1,11 @@
 import { GridDetect, contour, Point } from "./MarchingSquares";
 
+const cachedImageData: { [id: string]: ImageData } = {};
+
+const addToCache = <K extends keyof typeof cachedImageData>(key: K, value: ImageData) => {
+    cachedImageData[key] = value;
+}
+
 export interface ImageData 
 {
     height: number,
@@ -8,8 +14,15 @@ export interface ImageData
     boundingPoints: Point[]
 }
 
-export const  getImageData = async (imageUrl: string, workingCanvas: HTMLCanvasElement) : Promise<ImageData> =>
+export const getImageData = async (imageUrl: string, workingCanvas: HTMLCanvasElement) : Promise<ImageData> =>
 {
+    const cachedData = cachedImageData[imageUrl];
+
+    if (cachedData)
+    {
+        return cachedData;
+    }
+
     let loadPromise = new Promise<HTMLImageElement>((resolve, reject) => {        
         const imageElement = new Image();
         imageElement.crossOrigin = "anonymous";
@@ -48,12 +61,16 @@ export const  getImageData = async (imageUrl: string, workingCanvas: HTMLCanvasE
 
     var points = contour(defineNonTransparent);
 
-    return {
+    var data: ImageData = {
         width: canvasWidth,
         height: canvasHeight,
         boundingPoints: points,
         dataUrl: workingCanvas.toDataURL()
     };
+    
+    addToCache(imageUrl, data);
+
+    return data;
 }
 
 export const getClipPath = (imgData: ImageData) : string => 

@@ -1,10 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Board, { BoardMethods } from './Components/Board';
-import Image, { ImageState, BoundingRect } from './Components/Image';
-import { makeStyles } from '@material-ui/core/styles';
+import Image from './Components/Image';
+import { ImageState, BoundingRect, AvailableWorkshopImage } from './CommonTypes';
+import { makeStyles, createMuiTheme } from '@material-ui/core/styles';
+import { ThemeProvider } from '@material-ui/styles';
 import { loadWorkshop } from './WorkshopLoader';
 import SelectionLayer from './Components/SelectionLayer';
 import { OptionBar } from './OptionBar';
+
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: '#FF66B2',
+      light: '#FF007F'
+    }
+  }
+})
 
 const useStyles = makeStyles(theme => ({
   computeCanvas: {
@@ -22,11 +33,6 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-enum ZOrderOperation {
-  Forward,
-  Back
-}
-
 function App() {
 
   const classes = useStyles();
@@ -34,8 +40,9 @@ function App() {
   const boardMethods = useRef<BoardMethods>(null);
   const cachedImageStates = useRef<(ImageState | null)[]>();
   const [workshopName, setWorkshopName] = useState("");
-  const [workshopImages, setWorkshopImages] = useState<string[]>([]);
-  const [workshopUrl, setWorkshopUrl] = useState("http://192.168.1.86:3000/workshop/");
+  const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
+  const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
+  const [workshopUrl, setWorkshopUrl] = useState("http://localhost:3000/workshop/");
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -51,10 +58,17 @@ function App() {
         var workshopData = await loadWorkshop(workshopUrl);
 
         setWorkshopName(workshopData.name);
-        setWorkshopImages(workshopData.images);
+
+        var loadedImages = workshopData.images.map(url => ({
+          url,
+          inUse: false
+        }));
+
+        setWorkshopImages(loadedImages);
+        setOrderedImages(loadedImages);
 
         // Define a cached set of image states.
-        cachedImageStates.current = workshopData.images.map(url => ({ url: url, borderPoints: "", boundingRect: { left: 0, top: 0, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
+        cachedImageStates.current = workshopData.images.map(url => ({ url: url, inUse: false, borderPoints: "", boundingRect: { left: 0, top: 0, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
       }
       catch(e)
       {
@@ -78,7 +92,8 @@ function App() {
     // Find the item in the array and update it.
     var idx = imgData.findIndex(img => img && img.url === state.url);
 
-    imgData[idx] = state;
+    // Merge state, but keep the inUse flag.
+    imgData[idx] = {...state, inUse: imgData[idx]!.inUse };
   }
 
   const handleImageEnter = (state: ImageState) => {    
@@ -167,11 +182,11 @@ function App() {
     cachedImages.splice(moveToIdx, 0, cacheItem);
 
     // Now do the same thing for the image state list.
-    let newState = [...workshopImages];
+    let newState = [...orderedImages];
     var removed = newState.splice(cacheItemIdx, 1);
     newState.splice(moveToIdx, 0, removed[0]);
 
-    setWorkshopImages(newState);
+    setOrderedImages(newState);
   }
 
   const forwardZOrder = (existingIdx: number, currentImageState: ImageState, allImages: (ImageState | null)[]) => {
@@ -181,7 +196,7 @@ function App() {
     {
       var testItem = allImages[testItemIdx];
 
-      if(testItem && intersects(testItem?.boundingRect, currentImageState.boundingRect))
+      if(testItem && testItem.inUse && intersects(testItem?.boundingRect, currentImageState.boundingRect))
       {
         return testItemIdx + 1;
       }
@@ -198,7 +213,7 @@ function App() {
     {
       var testItem = allImages[testItemIdx];
 
-      if(testItem && intersects(testItem?.boundingRect, currentImageState.boundingRect))
+      if(testItem && testItem.inUse && intersects(testItem?.boundingRect, currentImageState.boundingRect))
       {
         return testItemIdx - 1;
       }
@@ -206,37 +221,89 @@ function App() {
 
     // Already at the bottom, nothing to do.
     return existingIdx;
-  }
+  };
+
+  const toggleUseImage = (url: string, use: boolean) =>
+  {
+    var workshopItemIdx = workshopImages.findIndex(img => img.url === url);
+
+    if (workshopItemIdx === -1)
+    {
+      return;
+    }
+
+    if (workshopImages[workshopItemIdx].inUse === use)
+    {
+      // Nothing to do.
+      return;
+    }
+
+    var newImages = [...workshopImages];
+
+    newImages[workshopItemIdx].inUse = use;
+
+    setWorkshopImages(newImages);
+
+    var newOrderedImages = [...orderedImages];
+
+    var orderedIdx = orderedImages.findIndex(img => img.url === url);
+
+    if (orderedIdx === -1)
+    {
+      // Not sure how this would ever happen?
+      console.warn("Image in general list but not in ordered list.");
+      return;
+    }
+
+    var item = newOrderedImages[orderedIdx];
+    item.inUse = use;
+    
+    newOrderedImages.splice(orderedIdx, 1);
+    newOrderedImages.push(item);
+
+    setOrderedImages(newOrderedImages);
+
+    // And finally update the cached image data.
+    var imgStates = cachedImageStates.current!;
+    var currentState = imgStates[orderedIdx];
+    currentState!.inUse = use;
+
+    imgStates.splice(orderedIdx, 1);
+    imgStates.push(currentState);
+  };
 
   const activeImageBorder = movingImageData ?? hoverImageData ?? selectedImageData;
   const activeImageSelection = movingImageData ?? selectedImageData;
 
   return (
-    <div className="App">      
-      <Board ref={boardMethods} active={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
-        {workshopImages.map(url => 
-          (<Image 
-              canvas={processingCanvasEl.current!} 
-              url={url} 
-              key={url} 
-              dragScale={dragScale}
-              onInitialStateAvailable={updateImageState}
-              onMovingStart={() => setBoardMotionActive(false)}
-              onMove={handleMove}
-              onMouseEnter={handleImageEnter}
-              onMouseLeave={handleImageLeave}
-              onMovingEnd={handleMoveEnd}
-              onSelect={handleSelect} />) )}
-              
-        <SelectionLayer selectedImage={activeImageBorder} key="_selection" />
-      </Board>
-      <OptionBar activeImage={activeImageSelection} 
-                 onZoomToFit={() => { boardMethods.current?.resetZoom(); }}
-                 onUpOne={() => { handleImageZOrderChange(activeImageSelection!, forwardZOrder); }}
-                 onDownOne={() => { handleImageZOrderChange(activeImageSelection!, backZOrder) }}
-                 />
-      <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
-    </div>
+    <ThemeProvider theme={theme}>
+      <div className="App">      
+        <Board ref={boardMethods} active={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
+          {orderedImages.filter(img => img.inUse).map(img => 
+            (<Image 
+                canvas={processingCanvasEl.current!} 
+                url={img.url}
+                key={img.url}
+                dragScale={dragScale}
+                onInitialStateAvailable={updateImageState}
+                onMovingStart={() => setBoardMotionActive(false)}
+                onMove={handleMove}
+                onMouseEnter={handleImageEnter}
+                onMouseLeave={handleImageLeave}
+                onMovingEnd={handleMoveEnd}
+                onSelect={handleSelect} />) )}              
+          <SelectionLayer selectedImage={activeImageBorder} key="_selection" />
+        </Board>
+        <OptionBar activeImage={activeImageSelection}
+                  allImages={workshopImages}
+                  onZoomToFit={() => boardMethods.current?.resetZoom()}
+                  onUpOne={() => handleImageZOrderChange(activeImageSelection!, forwardZOrder)}
+                  onDownOne={() => handleImageZOrderChange(activeImageSelection!, backZOrder)}
+                  onUseImage={url => toggleUseImage(url, true)}
+                  />
+        <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
+      </div>  
+    </ThemeProvider>
   );
 }
 

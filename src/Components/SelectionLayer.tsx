@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { ImageState } from './Image';
+import { ImageState } from '../CommonTypes';
 import { createUseStyles } from 'react-jss';
 
 const useStyles = createUseStyles({
