@@ -13,7 +13,8 @@ export interface AvailableWorkshopImage {
     url: string;
     inUse: boolean;
     initialX: number,
-    initialY: number
+    initialY: number,
+    rotate: number
 }
 
 export interface ImageInitData
@@ -26,6 +27,7 @@ export interface ImageInitData
 export interface ImageState extends ImageInitData
 {
     inUse: boolean,
+    rotate: number,
     boundingRect: BoundingRect
 }
 

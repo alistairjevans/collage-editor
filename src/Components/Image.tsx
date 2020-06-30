@@ -14,7 +14,6 @@ const useStyles = createUseStyles({
     },
 
     svgEntity: {
-        position: 'absolute',
         left: 0,
         top: 0
     }
@@ -24,6 +23,7 @@ export interface ImageProps {
     url: string,
     initialX?: number,
     initialY?: number,
+    rotate?: number,
     canvas: HTMLCanvasElement,
     onInitialStateAvailable?: (img: ImageState) => void,
     onMovingStart?: (img: ImageState) => void,
@@ -38,7 +38,7 @@ export interface ImageProps {
 const Image : FunctionComponent<ImageProps> = ({
      url, 
      canvas, 
-     initialX = 0, initialY = 0,
+     initialX = 0, initialY = 0, rotate = 0,
      onInitialStateAvailable,
      onMovingStart, onMovingEnd, onMove, 
      onMouseEnter, onMouseLeave, 
@@ -48,7 +48,7 @@ const Image : FunctionComponent<ImageProps> = ({
     const classes = useStyles();
     const [ svgProps, setSvgProps ] = useState({ width: 0, height: 0, style: {} } as React.SVGAttributes<HTMLOrSVGElement>);
     const [ imgProps, setImgProps ] = useState({ width: 0, height: 0, href: "" } as React.SVGAttributes<SVGImageElement>);
-    const [ containerProps, setContainerProps] = useState({} as React.HTMLAttributes<HTMLDivElement>);
+    const [ clipPath, setClipPath] = useState("");
     const imageInitData = useRef(null as ImageInitData | null);
     const lastKnownPosition = useRef({ left: initialX, right: 0, top: initialY, bottom: 0 });
     
@@ -72,9 +72,7 @@ const Image : FunctionComponent<ImageProps> = ({
                 href: imageData.dataUrl,
             });
 
-            setContainerProps({
-                style: { clipPath: `polygon(${clipPath})` }
-            });
+            setClipPath(`polygon(${clipPath})`);
 
             imageInitData.current = {
                 url,
@@ -85,12 +83,13 @@ const Image : FunctionComponent<ImageProps> = ({
             onInitialStateAvailable?.({
                 ...imageInitData.current!,
                 inUse: true,
+                rotate: rotate,
                 boundingRect: lastKnownPosition.current
             });
         }
 
         load();
-    }, [url, canvas, onInitialStateAvailable]);
+    }, [url, canvas, rotate, onInitialStateAvailable]);
 
     const getStateData = (dragData: DraggableData) : ImageState =>
     {
@@ -99,7 +98,8 @@ const Image : FunctionComponent<ImageProps> = ({
         return {
             ...imageInitData.current!,
             inUse: true,
-            boundingRect: { left: initialX + dragData.x, top: initialY + dragData.y, right: dragData.x + size.width, bottom: dragData.y + size.height }
+            rotate: rotate,
+            boundingRect: { left: initialX + dragData.x, top: initialY + dragData.y, right: initialX + dragData.x + size.width, bottom: initialY + dragData.y + size.height }
         }
     }
 
@@ -125,6 +125,7 @@ const Image : FunctionComponent<ImageProps> = ({
         onMouseEnter?.({
             ...imageInitData.current!,
             inUse: true,
+            rotate: rotate,
             boundingRect: lastKnownPosition.current
         });
     }
@@ -133,6 +134,7 @@ const Image : FunctionComponent<ImageProps> = ({
         onMouseLeave?.({
             ...imageInitData.current!,
             inUse: true,
+            rotate: rotate,
             boundingRect: lastKnownPosition.current
         });
     }
@@ -141,24 +143,27 @@ const Image : FunctionComponent<ImageProps> = ({
         onSelect?.({            
             ...imageInitData.current!,
             inUse: true,
+            rotate: rotate,
             boundingRect: lastKnownPosition.current
         })
     }
 
     return <Draggable 
                 scale={dragScale} 
-                positionOffset={{x: initialX, y: initialY}}
+                positionOffset={{x: initialX, y: initialY}}                
                 onStart={(_, data) => moveStartHandler(data)}
                 onStop={(_, data) => moveEndHandler(data)} 
                 onDrag={(_, data) => moveHandler(data)}
                 onMouseDown={selectedHandler}>
-                <div style={containerProps.style} 
-                    className={classes.container} 
-                    onMouseEnter={() => enterHandler()} 
-                    onMouseLeave={() => leaveHandler()}>
-                    <svg className={classes.svgEntity} {...svgProps} >        
-                        <image {...imgProps} />
-                    </svg>
+                <div>
+                    <div style={{ clipPath: clipPath, transform: `rotate(${rotate}deg)` }} 
+                        className={classes.container} 
+                        onMouseEnter={() => enterHandler()} 
+                        onMouseLeave={() => leaveHandler()}>
+                        <svg className={classes.svgEntity} {...svgProps}>        
+                            <image {...imgProps} />
+                        </svg>
+                    </div>
                 </div>
     </Draggable>;
 };

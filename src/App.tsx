@@ -7,6 +7,8 @@ import { ThemeProvider } from '@material-ui/styles';
 import { loadWorkshop } from './WorkshopLoader';
 import SelectionLayer from './Components/SelectionLayer';
 import { OptionBar } from './OptionBar';
+import InteractionLayer from './Components/InteractionLayer';
+import { Transform } from 'panzoom';
 
 const theme = createMuiTheme({
   palette: {
@@ -48,7 +50,7 @@ function App() {
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
   const [movingImageData, setMovingImageData] = useState<ImageState | null>(null);
-  const [dragScale, setDragScale] = useState(1);
+  const [interactionTransform, setInteractionTransform] = useState<Transform>({ x: 0, y: 0, scale: 1.0 });
 
   useEffect(() => {
     const workshopLoad = async () => {
@@ -67,7 +69,8 @@ function App() {
           url,
           inUse: false,
           initialX: 0,
-          initialY: 0
+          initialY: 0,
+          rotate: 0
         }));
 
         let orderedImages = loadedImages;
@@ -85,7 +88,8 @@ function App() {
               inUse: cachedImg.inUse,
               url: cachedImg.url,
               initialX: cachedImg.x,
-              initialY: cachedImg.y
+              initialY: cachedImg.y,
+              rotate: 0
             }));
 
             parsedData.images.forEach(cachedImg => {
@@ -106,7 +110,7 @@ function App() {
               if (!orderedImages.find(v => v.url === additionalUrl))
               {
                 // Add the image.
-                orderedImages.push({ url: additionalUrl, inUse: false, initialX: 0, initialY: 0 });
+                orderedImages.push({ url: additionalUrl, inUse: false, initialX: 0, initialY: 0, rotate: 0 });
               }
             });
           }
@@ -116,7 +120,7 @@ function App() {
         setOrderedImages(orderedImages);
 
         // Define a cached set of image states.
-        cachedImageStates.current = orderedImages.map(img => ({ url: img.url, inUse: img.inUse, borderPoints: "", boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
+        cachedImageStates.current = orderedImages.map(img => ({ url: img.url, inUse: img.inUse, rotate: 0, borderPoints: "", boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
       }
       catch(e)
       {
@@ -360,10 +364,16 @@ function App() {
     }
   };  
 
+  const transformChanged = useCallback((transform: Transform) => {
+
+    setInteractionTransform(transform);
+
+  }, [setInteractionTransform]);
+
   return (
     <ThemeProvider theme={theme}>
       <div className="App">      
-        <Board ref={boardMethods} backgroundColor={backgroundColor} motionActive={boardMotionActive} onScaleChanged={scale => setDragScale(scale)} onBackgroundClicked={() => setSelectedImageData(null)}>
+        <Board ref={boardMethods} backgroundColor={backgroundColor} motionActive={boardMotionActive} onTransformChanged={transformChanged} onBackgroundClicked={() => setSelectedImageData(null)}>
           {orderedImages.filter(img => img.inUse).map(img => 
             (<Image 
                 canvas={processingCanvasEl.current!} 
@@ -371,7 +381,8 @@ function App() {
                 key={img.url}
                 initialX={img.initialX}
                 initialY={img.initialY}
-                dragScale={dragScale}
+                rotate={img.rotate}
+                dragScale={interactionTransform.scale}
                 onInitialStateAvailable={updateImageState}
                 onMovingStart={() => setBoardMotionActive(false)}
                 onMove={handleMove}
@@ -381,6 +392,7 @@ function App() {
                 onSelect={handleSelect} />) )}              
           <SelectionLayer hoverImage={hoverImageData} selectedImage={movingImageData ?? selectedImageData} key="_selection" />
         </Board>
+        <InteractionLayer selectedImage={movingImageData ?? selectedImageData} currentBoardTransform={interactionTransform} />
         <OptionBar activeImage={selectedImageData}
                   boardBackgroundColor={backgroundColor}
                   workshopName={workshopName}

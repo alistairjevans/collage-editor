@@ -24,7 +24,8 @@ const SelectionPolygon : FunctionComponent<SelectionPolygonProps> = ({ img, colo
 
     return <svg className={classes.selectionBorderSvg} width={img.imageSize.width} height={img.imageSize.height} style={{
         left: img.boundingRect.left,
-        top: img.boundingRect.top
+        top: img.boundingRect.top,
+        transform: `rotate(${img.rotate}deg)`
     }}>
         <polygon className={classes.selectionBorderPolygon} points={img.borderPoints}></polygon>
     </svg>;

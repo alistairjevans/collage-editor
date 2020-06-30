@@ -20,7 +20,7 @@ export interface BoardMethods {
 export interface BoardProps {
         motionActive?: boolean;
         backgroundColor?: string;
-        onScaleChanged?: (scale: number) => void;
+        onTransformChanged?: (transform: Transform) => void;
         onBackgroundClicked?: () => void;
         children?: React.ReactNode;
 }
@@ -83,7 +83,7 @@ async function resetZoom(panZoom: PanZoom, container: HTMLElement)
     );
 }
 
-const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive = true, backgroundColor = "#ffffff", onScaleChanged, onBackgroundClicked, children }, ref) =>
+const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive = true, backgroundColor = "#ffffff", onTransformChanged, onBackgroundClicked, children }, ref) =>
 {
     const panZoomInstance = useRef<PanZoom | null>(null);
     const mouseDownTransform = useRef<Transform | null>(null);
@@ -115,16 +115,17 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive 
 
     useEffect(() => {
         
-        if (onScaleChanged && isPanZoomInitialised)
+        if (onTransformChanged && isPanZoomInitialised)
         {
             const panZoom = panZoomInstance.current!;
-            panZoom.on('zoom', (e) => 
+            panZoom.on('transform', (e) => 
             {
-                onScaleChanged(panZoom.getTransform().scale);
+                var transform = panZoom.getTransform();
+                onTransformChanged({...transform});
             });
         }
 
-    }, [isPanZoomInitialised, onScaleChanged])
+    }, [isPanZoomInitialised, onTransformChanged])
 
     useEffect(() => {
 

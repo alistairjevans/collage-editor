@@ -2,6 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { ImageState } from '../CommonTypes';
 import { makeStyles } from '@material-ui/core/styles';
 import SelectionPolygon from './SelectionPolygon';
+import SelectionRotator from './SelectionRotator';
 
 const useStyles = makeStyles(() => ({
   selectionLayer: {
