@@ -1,12 +1,13 @@
 import React, { FunctionComponent, useState, useRef } from 'react';
 import { ImageState, AvailableWorkshopImage } from './CommonTypes';
-import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, Drawer, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, Drawer, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
 import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
 import PhotoAlbumIcon from '@material-ui/icons/PhotoAlbum';
 import PaletteIcon from '@material-ui/icons/Palette';
 import DeleteIcon from '@material-ui/icons/Delete';
+import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery'; 
 
@@ -115,10 +116,14 @@ export const OptionBar: FunctionComponent<{
     onRemoveImage?: () => void,
     onUseImage?: (url : string) => void,
     onBackgroundColorChange?: (color: string) => void,
-}> = ({ activeImage, workshopName, boardBackgroundColor, allImages, onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage, onBackgroundColorChange }) => {
+    onDeleteAll?: () => void
+}> = ({ 
+    activeImage, workshopName, boardBackgroundColor, allImages, 
+    onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage, onBackgroundColorChange, onDeleteAll }) => {
 
   const classes = useStyles();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const theme = useTheme();
   const isBig = useMediaQuery(theme.breakpoints.up("sm"));
   const colorPicker = useRef<HTMLInputElement>(null);
@@ -144,6 +149,17 @@ export const OptionBar: FunctionComponent<{
 
   const promptForColor = () => {
     colorPicker.current?.click();
+  }
+
+  const handleDeleteDialogClose = (confirmed: boolean) => {
+    
+    setDeleteAllDialogOpen(false);
+
+    if (confirmed)
+    {
+        onDeleteAll?.();
+    }
+
   }
 
   let heading: React.ReactNode;
@@ -204,6 +220,9 @@ export const OptionBar: FunctionComponent<{
                                     <PaletteIcon />
                                 </IconButton>
                                 <input className={classes.colorPicker} type="color" ref={colorPicker} value={boardBackgroundColor ?? "#FFFFFF"} onChange={ev => onBackgroundColorChange?.(ev.target.value)}></input>
+                                <IconButton edge="end" color="inherit" onClick={() => setDeleteAllDialogOpen(true)}>
+                                    <DeleteSweepIcon />
+                                </IconButton>
                             </div>
                         </Slide>
                     </div>
@@ -235,6 +254,23 @@ export const OptionBar: FunctionComponent<{
                 </GridList>
             </div>
         </SwipeableDrawer>
+        <Dialog open={deleteAllDialogOpen} onClose={() => handleDeleteDialogClose(false)}>
+          <DialogTitle>Delete All Images?</DialogTitle>
+          <DialogContent>
+              <DialogContentText>
+                  This will remove all your images from the collage and start again. Are you sure?
+              </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => handleDeleteDialogClose(false)} color="primary" autoFocus>
+                No, I'm still using them!
+            </Button>
+            <Button onClick={() => handleDeleteDialogClose(true)} color="primary">
+                Yep, I'm sure, remove my images.
+            </Button>
+          </DialogActions>
+        </Dialog>
+        
   </React.Fragment> ;
 
 };

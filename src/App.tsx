@@ -70,6 +70,8 @@ function App() {
           initialY: 0
         }));
 
+        let orderedImages = loadedImages;
+  
         if (existingData)
         {
           var parsedData = JSON.parse(existingData) as SavedWorkshopState;
@@ -79,29 +81,42 @@ function App() {
             // Use our loaded images.
             setBackgroundColor(parsedData.backgroundColor);
 
-            loadedImages = parsedData.images.map(cachedImg => ({
+            orderedImages = parsedData.images.map(cachedImg => ({
               inUse: cachedImg.inUse,
               url: cachedImg.url,
               initialX: cachedImg.x,
               initialY: cachedImg.y
             }));
 
+            parsedData.images.forEach(cachedImg => {
+            
+              if (cachedImg.inUse)
+              {
+                var loadedImg = loadedImages.find(img => img.url === cachedImg.url);
+                if (loadedImg)
+                {
+                  loadedImg.inUse = true;
+                }
+              }
+
+            });
+
             // Make sure we have all the images.
             workshopData.images.forEach(additionalUrl => {
-              if (!loadedImages.find(v => v.url === additionalUrl))
+              if (!orderedImages.find(v => v.url === additionalUrl))
               {
                 // Add the image.
-                loadedImages.push({ url: additionalUrl, inUse: false, initialX: 0, initialY: 0 });
+                orderedImages.push({ url: additionalUrl, inUse: false, initialX: 0, initialY: 0 });
               }
             });
           }
         }
 
         setWorkshopImages(loadedImages);
-        setOrderedImages(loadedImages);
+        setOrderedImages(orderedImages);
 
         // Define a cached set of image states.
-        cachedImageStates.current = loadedImages.map(img => ({ url: img.url, inUse: img.inUse, borderPoints: "", boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
+        cachedImageStates.current = orderedImages.map(img => ({ url: img.url, inUse: img.inUse, borderPoints: "", boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
       }
       catch(e)
       {
@@ -280,6 +295,12 @@ function App() {
     return existingIdx;
   };
 
+  const deleteAll = () => {
+    setWorkshopImages(workshopImages.map(img => ({...img, inUse: false})));
+    setOrderedImages(orderedImages.map(img => ({...img, inUse: false})));
+    cachedImageStates.current!.forEach(state => { if(state) { state.inUse = false; } });
+  };
+
   const toggleUseImage = (url: string, use: boolean) =>
   {
     var workshopItemIdx = workshopImages.findIndex(img => img.url === url);
@@ -338,6 +359,7 @@ function App() {
       setSelectedImageData(null);
     }
   };  
+
   return (
     <ThemeProvider theme={theme}>
       <div className="App">      
@@ -368,7 +390,8 @@ function App() {
                   onDownOne={() => handleImageZOrderChange(selectedImageData!, backZOrder)}
                   onRemoveImage={() => toggleUseImage(selectedImageData!.url, false)}
                   onUseImage={url => toggleUseImage(url, true)}
-                  onBackgroundColorChange={color => setBackgroundColor(color)}            
+                  onBackgroundColorChange={color => setBackgroundColor(color)}    
+                  onDeleteAll={deleteAll}        
                   />
         <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
       </div>  
