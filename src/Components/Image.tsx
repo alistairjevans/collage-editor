@@ -90,7 +90,7 @@ const Image : FunctionComponent<ImageProps> = ({
         }
 
         load();
-    }, [url, canvas]);
+    }, [url, canvas, onInitialStateAvailable]);
 
     const getStateData = (dragData: DraggableData) : ImageState =>
     {

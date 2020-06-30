@@ -43,7 +43,7 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
   const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
-  const [workshopUrl, setWorkshopUrl] = useState(() => new URL("/workshop/", window.location.href).href);
+  const [workshopUrl] = useState(() => new URL("/workshop/", window.location.href).href);
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -150,7 +150,7 @@ function App() {
     
   }, [backgroundColor, orderedImages, workshopUrl, saveState]);
 
-  const updateImageState = (state: ImageState) => {
+  const updateImageState = useCallback((state: ImageState) => {
 
     var imgData = cachedImageStates.current;
     
@@ -164,7 +164,7 @@ function App() {
 
     // Merge state, but keep the inUse flag.
     imgData[idx] = {...state, inUse: imgData[idx]!.inUse };
-  }
+  }, []);
 
   const handleImageEnter = (state: ImageState) => {    
     setHoverImageData(state);
