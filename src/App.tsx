@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Board, { BoardMethods } from './Components/Board';
 import Image from './Components/Image';
 import { ImageState, BoundingRect, AvailableWorkshopImage, SavedWorkshopState } from './CommonTypes';
@@ -43,7 +43,7 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
   const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
-  const [workshopUrl, setWorkshopUrl] = useState("http://192.168.1.86:3000/workshop/");
+  const [workshopUrl, setWorkshopUrl] = useState(() => new URL("/workshop/", window.location.href).href);
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -128,7 +128,7 @@ function App() {
     workshopLoad();
   }, [workshopUrl]);
 
-  const saveState = () =>
+  const saveState = useCallback(() =>
   {
     if (!workshopUrl || !cachedImageStates.current)
     {
@@ -142,7 +142,7 @@ function App() {
     };
 
     localStorage.setItem(`data_${workshopUrl}`, JSON.stringify(data));
-  }
+  }, [backgroundColor, workshopUrl]);
 
   useEffect(() => {
 
@@ -187,7 +187,7 @@ function App() {
       setHoverImageData(state);
     }
 
-    if (selectedImageData && selectedImageData.url == state.url)
+    if (selectedImageData && selectedImageData.url === state.url)
     {
       setSelectedImageData(state);
     }
@@ -220,7 +220,7 @@ function App() {
     // To move the image up one, we first find the position of the image in the array.
     // Then we walk up the array, find the next element with an overlapping bounding box.
     // If we don't find one, it goes at the top.
-    var cacheItemIdx = cachedImages.findIndex(cImg => cImg?.url == image.url);
+    var cacheItemIdx = cachedImages.findIndex(cImg => cImg?.url === image.url);
 
     if (cacheItemIdx === -1)
     {
@@ -232,7 +232,7 @@ function App() {
 
     let moveToIdx = newIdxFunc(cacheItemIdx, cacheItem, cachedImages);
     
-    if (moveToIdx == cacheItemIdx)
+    if (moveToIdx === cacheItemIdx)
     {
       // Nothing to do.
       return;

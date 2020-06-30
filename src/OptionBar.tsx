@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState, useRef } from 'react';
 import { ImageState, AvailableWorkshopImage } from './CommonTypes';
-import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, Drawer, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
+import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
 import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';

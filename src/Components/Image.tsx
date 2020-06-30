@@ -1,4 +1,4 @@
-import { FunctionComponent, useState, useEffect, useRef, useCallback } from "react";
+import { FunctionComponent, useState, useEffect, useRef } from "react";
 import React from 'react';
 import Draggable, { DraggableData } from 'react-draggable';
 import { getImageData, getClipPath, getBoundingPolygonPath } from "../ImageProcessing";

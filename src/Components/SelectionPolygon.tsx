@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { ImageState } from '../CommonTypes';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import { Theme } from '@material-ui/core/styles';
 
 interface SelectionPolygonProps { img: ImageState, color: 'primary' | 'secondary' }

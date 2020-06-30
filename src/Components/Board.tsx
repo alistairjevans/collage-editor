@@ -1,4 +1,4 @@
-import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, Component, useImperativeHandle, PropsWithChildren, StyleHTMLAttributes } from 'react';
+import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import panzoom, { Transform, PanZoom } from 'panzoom';
 import { createUseStyles } from 'react-jss';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
@@ -158,7 +158,10 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive 
             var startTransform = mouseDownTransform.current!;            
             var currentTransform = panZoomInstance.current!.getTransform();
 
-            if (startTransform && currentTransform && startTransform.x === currentTransform.x && startTransform.y === currentTransform.y && startTransform.scale == currentTransform.scale)
+            if (startTransform && currentTransform && 
+                startTransform.x === currentTransform.x && 
+                startTransform.y === currentTransform.y && 
+                startTransform.scale === currentTransform.scale)
             {
                 onBackgroundClicked?.();
             }
