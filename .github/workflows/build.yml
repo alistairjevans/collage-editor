@@ -26,7 +26,7 @@ jobs:
       uses: actions/setup-node@v2.1.0
 
     - name: Restore Packages
-      uses: npm install
+      run: npm install
 
     # Build it
     - name: Build
