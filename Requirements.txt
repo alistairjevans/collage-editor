@@ -21,7 +21,7 @@ Hand-cut workshops
     - Move an Image from the Box onto the Board.
     - Move an Image around on the Board.
     - Bring forward 1 
-       - Bounding Rectangle of image.
+       - Bounding Rectangle of image - may need to change to polygon intersection.
        - Adjust z-order to be 1 higher than the next image in the bounding rectangle.
     - Push back 1
     - Select an image.
@@ -38,7 +38,7 @@ Hand-cut workshops
 7. Store the state of the board somewhere:
     - Local storage?
     - Cloud...?
-
+    - Robots.txt file to ignore workshop folder
 
 Implementation
 --------------

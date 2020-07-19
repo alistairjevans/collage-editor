@@ -1,5 +1,6 @@
 import { GridDetect, contour, Point } from "./MarchingSquares";
 
+
 const cachedImageData: { [id: string]: ImageData } = {};
 
 const addToCache = <K extends keyof typeof cachedImageData>(key: K, value: ImageData) => {

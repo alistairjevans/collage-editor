@@ -9,6 +9,7 @@ import SelectionLayer from './Components/SelectionLayer';
 import { OptionBar } from './OptionBar';
 import InteractionLayer from './Components/InteractionLayer';
 import { Transform } from 'panzoom';
+import Flatten from '@flatten-js/core';
 
 const theme = createMuiTheme({
   palette: {
@@ -70,7 +71,7 @@ function App() {
           inUse: false,
           initialX: 0,
           initialY: 0,
-          rotate: 0
+          rotate: 45
         }));
 
         let orderedImages = loadedImages;
@@ -89,7 +90,7 @@ function App() {
               url: cachedImg.url,
               initialX: cachedImg.x,
               initialY: cachedImg.y,
-              rotate: 0
+              rotate: 45
             }));
 
             parsedData.images.forEach(cachedImg => {
@@ -120,7 +121,15 @@ function App() {
         setOrderedImages(orderedImages);
 
         // Define a cached set of image states.
-        cachedImageStates.current = orderedImages.map(img => ({ url: img.url, inUse: img.inUse, rotate: 0, borderPoints: "", boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, imageSize: { width: 0, height: 0 } }));
+        cachedImageStates.current = orderedImages.map(img => ({ 
+          url: img.url, 
+          inUse: img.inUse, 
+          rotate: 45, 
+          borderPoints: "", 
+          rawPolygon: new Flatten.Polygon(), 
+          transformedPolygon: new Flatten.Polygon(),
+          boundingRect: { left: img.initialX, top: img.initialY, right: 0, bottom: 0 }, 
+          imageSize: { width: 0, height: 0 } }));
       }
       catch(e)
       {
@@ -205,12 +214,9 @@ function App() {
     setSelectedImageData(state);
   }
 
-  const intersects = (r1: BoundingRect, r2: BoundingRect) =>
-  {
-    return !(r2.left > r1.right || 
-             r2.right < r1.left ||
-             r2.top > r1.bottom || 
-             r2.bottom < r1.top);
+  const intersects = (r1: ImageState, r2: ImageState) =>
+  {   
+    return r1.transformedPolygon.intersect(r2.transformedPolygon).length > 0;
   }
 
   const handleImageZOrderChange = (image: ImageState, newIdxFunc: (existingIdx: number, currentImageState: ImageState, allImages: (ImageState | null)[]) => number) => {
@@ -272,7 +278,7 @@ function App() {
     {
       var testItem = allImages[testItemIdx];
 
-      if(testItem && testItem.inUse && intersects(testItem?.boundingRect, currentImageState.boundingRect))
+      if(testItem && testItem.inUse && intersects(testItem, currentImageState))
       {
         return testItemIdx + 1;
       }
@@ -289,7 +295,7 @@ function App() {
     {
       var testItem = allImages[testItemIdx];
 
-      if(testItem && testItem.inUse && intersects(testItem?.boundingRect, currentImageState.boundingRect))
+      if(testItem && testItem.inUse && intersects(testItem, currentImageState))
       {
         return testItemIdx - 1;
       }

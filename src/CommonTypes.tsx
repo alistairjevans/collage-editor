@@ -1,3 +1,4 @@
+import Flatten from '@flatten-js/core';
 
 export interface SavedWorkshopState {
     backgroundColor: string,
@@ -20,7 +21,8 @@ export interface AvailableWorkshopImage {
 export interface ImageInitData
 {
     url: string,
-    imageSize: { width: number, height : number }
+    imageSize: { width: number, height : number },
+    rawPolygon: Flatten.Polygon,
     borderPoints: string
 }
 
@@ -28,7 +30,8 @@ export interface ImageState extends ImageInitData
 {
     inUse: boolean,
     rotate: number,
-    boundingRect: BoundingRect
+    boundingRect: BoundingRect,
+    transformedPolygon: Flatten.Polygon
 }
 
 export interface BoundingRect { 

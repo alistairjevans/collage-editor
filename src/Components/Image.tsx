@@ -2,8 +2,9 @@ import { FunctionComponent, useState, useEffect, useRef } from "react";
 import React from 'react';
 import Draggable, { DraggableData } from 'react-draggable';
 import { getImageData, getClipPath, getBoundingPolygonPath } from "../ImageProcessing";
-import { ImageState, ImageInitData } from "../CommonTypes";
+import { ImageState, ImageInitData, BoundingRect } from "../CommonTypes";
 import { createUseStyles } from 'react-jss';
+import Flatten from '@flatten-js/core';
 
 const useStyles = createUseStyles({
     
@@ -51,6 +52,7 @@ const Image : FunctionComponent<ImageProps> = ({
     const [ clipPath, setClipPath] = useState("");
     const imageInitData = useRef(null as ImageInitData | null);
     const lastKnownPosition = useRef({ left: initialX, right: 0, top: initialY, bottom: 0 });
+    const lastKnownIntersectionPolygon = useRef(new Flatten.Polygon());
     
     useEffect(() => {
         
@@ -76,49 +78,82 @@ const Image : FunctionComponent<ImageProps> = ({
 
             imageInitData.current = {
                 url,
-                imageSize: { width: imageData.width, height: imageData.height },
+                imageSize: { width: imageData.width, height: imageData.height },                
+                rawPolygon: new Flatten.Polygon(imageData.boundingPoints.map(v => Flatten.point(v.x, v.y))),
                 borderPoints: getBoundingPolygonPath(imageData)
             };
+
+            lastKnownIntersectionPolygon.current = computeTransformedPolygon(imageInitData.current.rawPolygon, lastKnownPosition.current, rotate);
 
             onInitialStateAvailable?.({
                 ...imageInitData.current!,
                 inUse: true,
                 rotate: rotate,
-                boundingRect: lastKnownPosition.current
+                boundingRect: lastKnownPosition.current,
+                transformedPolygon: lastKnownIntersectionPolygon.current
             });
         }
 
         load();
     }, [url, canvas, rotate, onInitialStateAvailable]);
 
-    const getStateData = (dragData: DraggableData) : ImageState =>
+    const getStateData = (dragData: DraggableData, updatePolygon: boolean) : ImageState =>
     {
-        var size = imageInitData.current!.imageSize;
+        const size = imageInitData.current!.imageSize;
+        const boundingRect = { left: initialX + dragData.x, top: initialY + dragData.y, right: initialX + dragData.x + size.width, bottom: initialY + dragData.y + size.height };
+
+        let transformedPolygon = lastKnownIntersectionPolygon.current;
+        
+        if (updatePolygon)
+        {
+            transformedPolygon = computeTransformedPolygon(
+                                    imageInitData.current!.rawPolygon, 
+                                    boundingRect,
+                                    rotate)
+        }
 
         return {
             ...imageInitData.current!,
             inUse: true,
             rotate: rotate,
-            boundingRect: { left: initialX + dragData.x, top: initialY + dragData.y, right: initialX + dragData.x + size.width, bottom: initialY + dragData.y + size.height }
+            boundingRect: boundingRect,            
+            transformedPolygon: transformedPolygon
         }
     }
 
     const moveStartHandler = (dragData: DraggableData) => {
-        onMovingStart?.(getStateData(dragData));
-    }
-
-    const moveEndHandler = (dragData: DraggableData) => {
-
-        var state = getStateData(dragData);
-
-        onMovingEnd?.(state);
-
-        // Store the last known position.
-        lastKnownPosition.current = state.boundingRect;
+        onMovingStart?.(getStateData(dragData, false));
     }
 
     const moveHandler = (dragData: DraggableData) => {
-        onMove?.(getStateData(dragData));
+        onMove?.(getStateData(dragData, false));
+    }    
+
+    const moveEndHandler = (dragData: DraggableData) => {
+
+        var state = getStateData(dragData, true);
+
+        onMovingEnd?.(state);
+
+        // Store the last known position and transform poly
+        lastKnownPosition.current = state.boundingRect;
+        lastKnownIntersectionPolygon.current = state.transformedPolygon;
+    }
+
+    const computeTransformedPolygon = (rawPolygon: Flatten.Polygon, boundingRect: BoundingRect, rotate: number) =>
+    {    
+        let angle = rotate * Math.PI/180.;
+
+        let center = rawPolygon.box.center;
+
+        // First rotate around the center; then translate.
+        let matrix = new Flatten.Matrix()        
+                            .translate(boundingRect.left, boundingRect.top)
+                            .translate(center.x, center.y)
+                            .rotate(angle)
+                            .translate(-center.x, -center.y);
+
+        return rawPolygon.transform(matrix);
     }
 
     const enterHandler = () => {
@@ -126,7 +161,8 @@ const Image : FunctionComponent<ImageProps> = ({
             ...imageInitData.current!,
             inUse: true,
             rotate: rotate,
-            boundingRect: lastKnownPosition.current
+            boundingRect: lastKnownPosition.current,
+            transformedPolygon: lastKnownIntersectionPolygon.current
         });
     }
 
@@ -135,7 +171,8 @@ const Image : FunctionComponent<ImageProps> = ({
             ...imageInitData.current!,
             inUse: true,
             rotate: rotate,
-            boundingRect: lastKnownPosition.current
+            boundingRect: lastKnownPosition.current,
+            transformedPolygon: lastKnownIntersectionPolygon.current
         });
     }
 
@@ -144,9 +181,10 @@ const Image : FunctionComponent<ImageProps> = ({
             ...imageInitData.current!,
             inUse: true,
             rotate: rotate,
-            boundingRect: lastKnownPosition.current
+            boundingRect: lastKnownPosition.current,
+            transformedPolygon: lastKnownIntersectionPolygon.current
         })
-    }
+    }    
 
     return <Draggable 
                 scale={dragScale} 
