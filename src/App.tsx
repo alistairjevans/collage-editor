@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Board, { BoardMethods } from './Components/Board';
 import Image from './Components/Image';
-import { ImageState, BoundingRect, AvailableWorkshopImage, SavedWorkshopState } from './CommonTypes';
+import { ImageState, AvailableWorkshopImage, SavedWorkshopState } from './CommonTypes';
 import { makeStyles, createMuiTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/styles';
 import { loadWorkshop } from './WorkshopLoader';
@@ -90,21 +90,8 @@ function App() {
               url: cachedImg.url,
               initialX: cachedImg.x,
               initialY: cachedImg.y,
-              rotate: 45
+              rotate: 45 // cachedImg.rotate
             }));
-
-      /*       parsedData.images.forEach(cachedImg => {
-            
-              if (cachedImg.inUse)
-              {
-                var loadedImg = loadedImages.find(img => img.url === cachedImg.url);
-                if (loadedImg)
-                {
-                  loadedImg.inUse = true;
-                }
-              }
-
-            }); */
 
             // Empty the ordered images set.
             orderedImages = [];
@@ -120,7 +107,7 @@ function App() {
               }
               else 
               {
-                orderedImages.push({ url: img.url, inUse: false, initialX: 0, initialY: 0, rotate: 0 });
+                orderedImages.push({ url: img.url, inUse: false, initialX: 0, initialY: 0, rotate: 45 });
               }
             });
           }
@@ -160,7 +147,7 @@ function App() {
     // Save to local storage.
     const data : SavedWorkshopState = { 
       backgroundColor,
-      images: cachedImageStates.current!.map((img) => ({ url: img!.url, inUse: img!.inUse, x: img!.boundingRect.left, y: img!.boundingRect.top }))
+      images: cachedImageStates.current!.map((img) => ({ url: img!.url, inUse: img!.inUse, x: img!.boundingRect.left, y: img!.boundingRect.top, rotate: img!.rotate }))
     };
 
     localStorage.setItem(`data_${workshopUrl}`, JSON.stringify(data));

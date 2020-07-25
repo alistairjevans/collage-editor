@@ -3,6 +3,7 @@ import { ImageState } from '../CommonTypes';
 import { makeStyles } from '@material-ui/core/styles';
 import SelectionRotator from './SelectionRotator';
 import { Transform } from 'panzoom';
+import Flatten from '@flatten-js/core';
 
 interface InteractionLayerProps 
 {
@@ -29,13 +30,22 @@ const InteractionLayer : FunctionComponent<InteractionLayerProps> = ({ selectedI
 
     if (selectedImage)
     {
-      const imageCenterX = selectedImage.boundingRect.left + (selectedImage.imageSize.width / 2);
-      const imageCenterY = selectedImage.boundingRect.top + (selectedImage.imageSize.height / 2);
+      var offsetBox = new Flatten.Box(
+        selectedImage.boundingRect.left, 
+        selectedImage.boundingRect.top,
+        selectedImage.boundingRect.right,
+        selectedImage.boundingRect.bottom);
 
-      var xOffset = currentBoardTransform.x + (imageCenterX * currentBoardTransform.scale);
-      var yOffset = currentBoardTransform.y + (imageCenterY * currentBoardTransform.scale);
+      var point = Flatten.point(selectedImage.boundingRect.left + (selectedImage.imageSize.width / 2), selectedImage.boundingRect.top - 100);
+      
+      let radsAngle = selectedImage.rotate * Math.PI/180.;
+
+      let rotatedPoint = point.rotate(radsAngle, offsetBox.center);
+
+      var xOffset = currentBoardTransform.x + (rotatedPoint.x * currentBoardTransform.scale);
+      var yOffset = currentBoardTransform.y + (rotatedPoint.y * currentBoardTransform.scale);
   
-      rotator = <SelectionRotator center={{ x: xOffset, y: yOffset }} distanceFromCenter={1} angle={0} />
+      rotator = <SelectionRotator center={{ x: xOffset, y: yOffset }} />
     }
 
     return <div className={classes.overlayLayer}>

@@ -6,7 +6,8 @@ export interface SavedWorkshopState {
         url: string,
         inUse: boolean, 
         x: number, 
-        y: number 
+        y: number,
+        rotate: number 
     }[]
 }
 
