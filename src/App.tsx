@@ -85,7 +85,7 @@ function App() {
             // Use our loaded images.
             setBackgroundColor(parsedData.backgroundColor);
 
-            orderedImages = parsedData.images.map(cachedImg => ({
+            let savedImages = parsedData.images.map(cachedImg => ({
               inUse: cachedImg.inUse,
               url: cachedImg.url,
               initialX: cachedImg.x,
@@ -93,7 +93,7 @@ function App() {
               rotate: 45
             }));
 
-            parsedData.images.forEach(cachedImg => {
+      /*       parsedData.images.forEach(cachedImg => {
             
               if (cachedImg.inUse)
               {
@@ -104,14 +104,23 @@ function App() {
                 }
               }
 
-            });
+            }); */
+
+            // Empty the ordered images set.
+            orderedImages = [];
 
             // Make sure we have all the images.
-            workshopData.images.forEach(additionalUrl => {
-              if (!orderedImages.find(v => v.url === additionalUrl))
+            loadedImages.forEach(img => {
+              const savedImg = savedImages.find(v => v.url === img.url);
+              if (savedImg)
               {
                 // Add the image.
-                orderedImages.push({ url: additionalUrl, inUse: false, initialX: 0, initialY: 0, rotate: 0 });
+                orderedImages.push(savedImg);
+                img.inUse = savedImg.inUse;
+              }
+              else 
+              {
+                orderedImages.push({ url: img.url, inUse: false, initialX: 0, initialY: 0, rotate: 0 });
               }
             });
           }
@@ -215,8 +224,27 @@ function App() {
   }
 
   const intersects = (r1: ImageState, r2: ImageState) =>
-  {   
-    return r1.transformedPolygon.intersect(r2.transformedPolygon).length > 0;
+  { 
+    var boolOp = Flatten.BooleanOperations;
+
+    if (r1.transformedPolygon.box.not_intersect(r2.transformedPolygon.box))
+    {
+      return false;
+    }
+
+    if (r1.transformedPolygon.intersect(r2.transformedPolygon).length > 0)
+    {
+      return true;
+    }
+
+    var clip = boolOp.innerClip(r1.transformedPolygon, r2.transformedPolygon);
+
+    if (clip[0].length > 0 || clip[1].length > 0)
+    {
+      return true;
+    }
+
+    return false;
   }
 
   const handleImageZOrderChange = (image: ImageState, newIdxFunc: (existingIdx: number, currentImageState: ImageState, allImages: (ImageState | null)[]) => number) => {

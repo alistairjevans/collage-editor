@@ -1,15 +1,21 @@
 {
     "name": "Test Workshop",
     "images": [
-        "chair.png",
+        "arm.png",
+        "art.png",
         "horse.png",
         "frame.png",
         "torso.png",
         "athlete.png",
-        "chair2.png",
-        "horse2.png",
-        "frame2.png",
-        "torso2.png",
-        "athlete2.png"
+        "avocado.png",
+        "bin.png",
+        "camera.png",
+        "gold.png",
+        "grin.png",
+        "jump.png",
+        "orange.png",
+        "printer.png",
+        "table.png",
+        "toilet.png"
     ]
 }
