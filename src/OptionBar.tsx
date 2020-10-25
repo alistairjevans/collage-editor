@@ -105,7 +105,7 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
 
 }));
 
-export const OptionBar: FunctionComponent<{ 
+const OptionBar: FunctionComponent<{ 
     activeImage?: ImageState | null,
     workshopName?: string,
     boardBackgroundColor?: string
@@ -274,3 +274,5 @@ export const OptionBar: FunctionComponent<{
   </React.Fragment> ;
 
 };
+
+export default React.memo(OptionBar);

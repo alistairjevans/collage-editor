@@ -1,9 +1,9 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, SVGProps } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Theme } from '@material-ui/core/styles';
 import LoopIcon from '@material-ui/icons/Loop';
 
-interface SelectionRotatorProps {
+interface SelectionRotatorProps extends SVGProps<SVGSVGElement> {
   center: { x: number, y: number }
 }
 
@@ -15,30 +15,17 @@ const useStyles = makeStyles(({ palette } : Theme) => ({
     pointerEvents: 'all'
   },
 
-  rotatorActive: {
-    position: 'absolute',
-    cursor: 'grabbing',    
-    pointerEvents: 'all'
-  }
-
 }));
 
-const SelectionRotator : FunctionComponent<SelectionRotatorProps> = ({ center }) =>
+const SelectionRotator : FunctionComponent<SelectionRotatorProps> = (props) =>
 {
+    const { center } = props;
     const classes = useStyles();
-    const [isActive, setIsActive] = useState(false);
 
-    let activeClass = classes.rotator;
-
-    if (isActive)
-    {
-      activeClass = classes.rotatorActive;
-    }
-
-    return <svg onMouseDown={() => setIsActive(true)} onMouseUp={() => setIsActive(false)} className={activeClass} width={50} height={50} style={{
+    return <svg className={classes.rotator} width={50} height={50} style={{
         left: center.x - 25,
         top: center.y - 25
-    }}>
+    }} {...props}>
         <LoopIcon />
     </svg>;
 }

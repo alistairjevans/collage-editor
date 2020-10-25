@@ -6,7 +6,7 @@ import { makeStyles, createMuiTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/styles';
 import { loadWorkshop } from './WorkshopLoader';
 import SelectionLayer from './Components/SelectionLayer';
-import { OptionBar } from './OptionBar';
+import OptionBar from './OptionBar';
 import InteractionLayer from './Components/InteractionLayer';
 import { Transform } from 'panzoom';
 import Flatten from '@flatten-js/core';
@@ -71,7 +71,7 @@ function App() {
           inUse: false,
           initialX: 0,
           initialY: 0,
-          rotate: 45
+          rotate: 0
         }));
 
         let orderedImages = loadedImages;
@@ -90,7 +90,7 @@ function App() {
               url: cachedImg.url,
               initialX: cachedImg.x,
               initialY: cachedImg.y,
-              rotate: 45 // cachedImg.rotate
+              rotate: cachedImg.rotate
             }));
 
             // Empty the ordered images set.
@@ -107,7 +107,7 @@ function App() {
               }
               else 
               {
-                orderedImages.push({ url: img.url, inUse: false, initialX: 0, initialY: 0, rotate: 45 });
+                orderedImages.push({ url: img.url, inUse: false, initialX: 0, initialY: 0, rotate: 0 });
               }
             });
           }
@@ -120,7 +120,7 @@ function App() {
         cachedImageStates.current = orderedImages.map(img => ({ 
           url: img.url, 
           inUse: img.inUse, 
-          rotate: 45, 
+          rotate: img.rotate, 
           borderPoints: "", 
           rawPolygon: new Flatten.Polygon(), 
           transformedPolygon: new Flatten.Polygon(),
@@ -385,6 +385,42 @@ function App() {
     }
   };  
 
+  const rotationChanged = (selectedImage: ImageState, rotationDeg: number) => {
+
+    var newState = { ...selectedImage, rotate: rotationDeg };
+
+    updateImageState(newState);
+    
+    if (selectedImageData && selectedImageData.url === newState.url)
+    {
+      setSelectedImageData(newState);
+    }
+
+    // Update the image.
+    let newOrderedImages = [...orderedImages];
+
+    // Find the right index.
+    var orderedIdx = newOrderedImages.findIndex(img => img.url === selectedImage.url);
+
+    newOrderedImages[orderedIdx].rotate = rotationDeg;
+
+    setOrderedImages(newOrderedImages);
+  }
+
+  const rotationEnded = (selectedImage: ImageState, rotationDeg: number) => {
+    
+    var newState = { ...selectedImage, rotate: rotationDeg };
+
+    if (selectedImageData && selectedImageData.url === newState.url)
+    {
+      setSelectedImageData(newState);
+    }
+
+    updateImageState(newState);
+
+    saveState();
+  }
+
   const transformChanged = useCallback((transform: Transform) => {
 
     setInteractionTransform(transform);
@@ -413,7 +449,7 @@ function App() {
                 onSelect={handleSelect} />) )}              
           <SelectionLayer hoverImage={hoverImageData} selectedImage={movingImageData ?? selectedImageData} key="_selection" />
         </Board>
-        <InteractionLayer selectedImage={movingImageData ?? selectedImageData} currentBoardTransform={interactionTransform} />
+        <InteractionLayer selectedImage={movingImageData ?? selectedImageData} currentBoardTransform={interactionTransform} onRotationChanged={rotationChanged} onRotationEnded={rotationEnded} />
         <OptionBar activeImage={selectedImageData}
                   boardBackgroundColor={backgroundColor}
                   workshopName={workshopName}
@@ -424,7 +460,7 @@ function App() {
                   onRemoveImage={() => toggleUseImage(selectedImageData!.url, false)}
                   onUseImage={url => toggleUseImage(url, true)}
                   onBackgroundColorChange={color => setBackgroundColor(color)}    
-                  onDeleteAll={deleteAll}        
+                  onDeleteAll={deleteAll}
                   />
         <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
       </div>  

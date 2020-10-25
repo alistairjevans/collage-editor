@@ -95,7 +95,9 @@ const Image : FunctionComponent<ImageProps> = ({
         }
 
         load();
-    }, [url, canvas, rotate, onInitialStateAvailable]);
+    // I want to capture rotate on load, and the overhead of storing initial and current rotate isn't worth it.
+    // eslint-disable-next-line
+    }, [url, canvas, onInitialStateAvailable]);
 
     const getStateData = (dragData: DraggableData, updatePolygon: boolean) : ImageState =>
     {
@@ -206,4 +208,4 @@ const Image : FunctionComponent<ImageProps> = ({
     </Draggable>;
 };
 
-export default Image;
+export default React.memo(Image);
