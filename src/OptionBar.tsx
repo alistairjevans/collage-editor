@@ -8,7 +8,7 @@ import PhotoAlbumIcon from '@material-ui/icons/PhotoAlbum';
 import PaletteIcon from '@material-ui/icons/Palette';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
-import PlayForWorkIcon from '@material-ui/icons/PlayForWork';
+/* import PlayForWorkIcon from '@material-ui/icons/PlayForWork'; */
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery'; 
 
