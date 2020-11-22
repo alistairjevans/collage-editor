@@ -25,6 +25,7 @@ export interface ImageProps {
     initialX?: number,
     initialY?: number,
     rotate?: number,
+    glued: boolean,
     canvas: HTMLCanvasElement,
     onInitialStateAvailable?: (img: ImageState) => void,
     onMovingStart?: (img: ImageState) => void,
@@ -40,6 +41,7 @@ const Image : FunctionComponent<ImageProps> = ({
      url, 
      canvas, 
      initialX = 0, initialY = 0, rotate = 0,
+     glued,
      onInitialStateAvailable,
      onMovingStart, onMovingEnd, onMove, 
      onMouseEnter, onMouseLeave, 
@@ -124,6 +126,12 @@ const Image : FunctionComponent<ImageProps> = ({
     }
 
     const moveStartHandler = (dragData: DraggableData) => {
+
+        if (glued)
+        {
+            return false;
+        }
+
         onMovingStart?.(getStateData(dragData, false));
     }
 

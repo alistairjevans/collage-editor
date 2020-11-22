@@ -8,6 +8,7 @@ import PhotoAlbumIcon from '@material-ui/icons/PhotoAlbum';
 import PaletteIcon from '@material-ui/icons/Palette';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
+import PlayForWorkIcon from '@material-ui/icons/PlayForWork';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery'; 
 
@@ -198,12 +199,15 @@ const OptionBar: FunctionComponent<{
                     <div className={classes.swappableSet}>
                         <Slide direction="up" in={activeImage !== null} mountOnEnter unmountOnExit>
                             <div>
+                                {/* <IconButton edge="end" color="inherit">
+                                    <PlayForWorkIcon />
+                                </IconButton> */}
                                 <IconButton edge="end" color="inherit" onClick={onUpOne}>
                                     <ArrowUpwardRoundedIcon />
                                 </IconButton>
                                 <IconButton edge="end" color="inherit" onClick={onDownOne}>
                                     <ArrowDownwardRoundedIcon />
-                                </IconButton>
+                                </IconButton>                                
                                 <IconButton edge="end" color="inherit" onClick={onRemoveImage}>
                                     <DeleteIcon />
                                 </IconButton>
@@ -234,7 +238,7 @@ const OptionBar: FunctionComponent<{
                 <Toolbar><Typography variant="h4"><PhotoAlbumIcon /> Box</Typography></Toolbar>
             </AppBar>
             <div className={classes.boxDrawer}>
-                <GridList className={classes.boxGrid} cellHeight="auto" cols={isBig ? 6 : 2} spacing={10}>
+                <GridList className={classes.boxGrid} cellHeight={160} cols={isBig ? 6 : 2} spacing={10}>
                     {allImages.filter(img => !img.inUse).map(img => (
                             <GridListTile key={img.url} cols={1}>
                                 <Box className={classes.imgBoundingBox} style={{backgroundImage: `url(${img.url})`}} border={2} onDoubleClick={() => setImageStateAndCloseDrawer(img.url)}>                                    

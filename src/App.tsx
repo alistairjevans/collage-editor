@@ -46,7 +46,7 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
   const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
-  const [workshopUrl] = useState(() => new URL("/workshop/", window.location.href).href);
+  const [workshopUrl] = useState(() => new URL("/big-workshop/", window.location.href).href);
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -436,6 +436,7 @@ function App() {
                 canvas={processingCanvasEl.current!} 
                 url={img.url}
                 key={img.url}
+                glued={false}
                 initialX={img.initialX}
                 initialY={img.initialY}
                 rotate={img.rotate}
