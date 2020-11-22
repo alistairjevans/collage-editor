@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/collage-editor/static/css/main.5ecd60fb.chunk.css",
-    "main.js": "/collage-editor/static/js/main.5f9f81da.chunk.js",
-    "main.js.map": "/collage-editor/static/js/main.5f9f81da.chunk.js.map",
+    "main.js": "/collage-editor/static/js/main.660c2a52.chunk.js",
+    "main.js.map": "/collage-editor/static/js/main.660c2a52.chunk.js.map",
     "runtime-main.js": "/collage-editor/static/js/runtime-main.25878b95.js",
     "runtime-main.js.map": "/collage-editor/static/js/runtime-main.25878b95.js.map",
     "static/js/2.362fc0e0.chunk.js": "/collage-editor/static/js/2.362fc0e0.chunk.js",
     "static/js/2.362fc0e0.chunk.js.map": "/collage-editor/static/js/2.362fc0e0.chunk.js.map",
     "index.html": "/collage-editor/index.html",
-    "precache-manifest.a97eb350f638b935fa3eb685db268c2b.js": "/collage-editor/precache-manifest.a97eb350f638b935fa3eb685db268c2b.js",
+    "precache-manifest.e250913302fc003ae994675c0dd08b8c.js": "/collage-editor/precache-manifest.e250913302fc003ae994675c0dd08b8c.js",
     "service-worker.js": "/collage-editor/service-worker.js",
     "static/css/main.5ecd60fb.chunk.css.map": "/collage-editor/static/css/main.5ecd60fb.chunk.css.map",
     "static/js/2.362fc0e0.chunk.js.LICENSE.txt": "/collage-editor/static/js/2.362fc0e0.chunk.js.LICENSE.txt"
@@ -17,6 +17,6 @@
     "static/js/runtime-main.25878b95.js",
     "static/js/2.362fc0e0.chunk.js",
     "static/css/main.5ecd60fb.chunk.css",
-    "static/js/main.5f9f81da.chunk.js"
+    "static/js/main.660c2a52.chunk.js"
   ]
 }

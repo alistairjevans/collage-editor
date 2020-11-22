@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/collage-editor/precache-manifest.a97eb350f638b935fa3eb685db268c2b.js"
+  "/collage-editor/precache-manifest.e250913302fc003ae994675c0dd08b8c.js"
 );
 
 self.addEventListener('message', (event) => {
