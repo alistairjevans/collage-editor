@@ -9,7 +9,8 @@ const useStyles = createUseStyles({
         left: 0,
         top: 0,
         height: '100%',
-        width: '100%'
+        width: '100%',
+        touchAction: 'none'
     }
 });
 

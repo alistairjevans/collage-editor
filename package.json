@@ -2,7 +2,7 @@
   "name": "collage-editor",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://alistairjevans.github.io/collage-editor",
+  "homepage": "https://collageit.co.uk",
   "dependencies": {
     "@flatten-js/core": "^1.2.8",
     "@material-ui/core": "^4.10.2",

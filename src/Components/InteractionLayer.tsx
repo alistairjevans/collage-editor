@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState, useRef, MouseEventHandler } from 'react';
+import React, { FunctionComponent, useState, useRef, MouseEventHandler, TouchEventHandler } from 'react';
 import { ImageState } from '../CommonTypes';
 import { makeStyles, Theme } from '@material-ui/core/styles';
 import SelectionRotator from './SelectionRotator';
@@ -26,7 +26,8 @@ const useStyles = makeStyles<Theme, StyleProps>(() => ({
     height: '100%',
     width: '100%',
     pointerEvents: props.isRotateActive ? 'auto' : 'none',
-    cursor: props.isRotateActive ? 'grabbing' : 'cursor'
+    cursor: props.isRotateActive ? 'grabbing' : 'cursor',    
+    touchAction: 'none'
   }),
 }));
 
@@ -35,12 +36,15 @@ const InteractionLayer : FunctionComponent<InteractionLayerProps> = ({ selectedI
     const [isRotateActive, setRotateActive] = useState(false);    
     const startRotateDegrees = useRef(0);
     const lastRotateDegrees = useRef(0);
+    const [touchId, setTouchId] = useState(-1);
     const classes = useStyles({ isRotateActive });
 
     let rotator: React.ReactNode;
     let mouseMove : MouseEventHandler<HTMLDivElement> | undefined;
+    let touchMove : TouchEventHandler<HTMLDivElement> | undefined;
     let interactionEnd : MouseEventHandler<HTMLDivElement> | undefined;
-
+    let touchEnd : TouchEventHandler<HTMLDivElement> | undefined;
+    
     if (selectedImage)
     {
       var offsetBox = new Flatten.Box(
@@ -71,11 +75,21 @@ const InteractionLayer : FunctionComponent<InteractionLayerProps> = ({ selectedI
         return degrees;
       }
   
-      rotator = <SelectionRotator center={{ x: xOffset, y: yOffset }} onMouseDown={(ev) => { 
-
+      rotator = <SelectionRotator center={{ x: xOffset, y: yOffset }} onMouseDown={(ev) => {
+        
         startRotateDegrees.current = getDegrees(ev.pageX, ev.pageY) - selectedImage.rotate;
         lastRotateDegrees.current = 0;
         setRotateActive(true);
+
+      }} onTouchStart={(ev) => {
+        
+        if (touchId === -1)
+        {
+          setTouchId(ev.changedTouches[0].identifier);
+          startRotateDegrees.current = getDegrees(ev.changedTouches[0].pageX, ev.changedTouches[0].pageY) - selectedImage.rotate;
+          lastRotateDegrees.current = 0;
+          setRotateActive(true);
+        }
 
       }} />
 
@@ -90,17 +104,52 @@ const InteractionLayer : FunctionComponent<InteractionLayerProps> = ({ selectedI
           lastRotateDegrees.current = degrees;
           onRotationChanged(selectedImage, degrees);
         }
+
+        touchMove = (ev) => {
+          
+          var changedTouchId = ev.changedTouches[0].identifier;
+
+          if (changedTouchId === touchId)
+          {
+            var touch = ev.changedTouches[0];
+            // Calculate the mouse move position, removing starting point
+            const degrees = getDegrees(touch.pageX, touch.pageY) - startRotateDegrees.current;
+            
+            lastRotateDegrees.current = degrees;
+            onRotationChanged(selectedImage, degrees);
+
+            ev.preventDefault();
+          }
+        }
         
         interactionEnd = () => 
         {
             onRotationEnded(selectedImage, lastRotateDegrees.current);
   
-            setRotateActive(false);          
+            setRotateActive(false);
+        };
+
+        touchEnd = ev => {
+          
+          var changedTouchId = ev.changedTouches[0].identifier;
+
+          if (changedTouchId === touchId)
+          {
+            onRotationEnded(selectedImage, lastRotateDegrees.current);
+  
+            setRotateActive(false);
+            setTouchId(-1);
+          }
         };
       }
     }
 
-    return <div className={classes.overlayLayer} onMouseUp={interactionEnd} onMouseLeave={interactionEnd} onMouseMove={mouseMove}>
+    return <div className={classes.overlayLayer} 
+                onMouseUp={interactionEnd} 
+                onTouchEnd={touchEnd} 
+                onMouseLeave={interactionEnd} 
+                onTouchMove={touchMove} 
+                onMouseMove={mouseMove}>
       {rotator}
     </div>;
 }

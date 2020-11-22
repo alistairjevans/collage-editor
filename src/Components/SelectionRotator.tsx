@@ -12,7 +12,8 @@ const useStyles = makeStyles(({ palette } : Theme) => ({
   rotator: {
     position: 'absolute',
     cursor: 'grab',
-    pointerEvents: 'all'
+    pointerEvents: 'all',
+    touchAction: 'none'
   },
 
 }));
