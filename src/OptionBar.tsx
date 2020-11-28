@@ -22,7 +22,19 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
     },
 
     barTitle: {
-        paddingRight: '10px'
+        paddingRight: '10px',
+        paddingLeft: '3em',
+        background: "url('/logo192.png')",
+        backgroundSize: "contain",
+        backgroundRepeat: "no-repeat"
+    },
+
+    barTitleLarge: {
+        paddingRight: '10px',
+        paddingLeft: '5em',
+        background: "url('/logo192.png')",
+        backgroundSize: "contain",
+        backgroundRepeat: "no-repeat"
     },
 
     divider: {
@@ -117,10 +129,11 @@ const OptionBar: FunctionComponent<{
     onRemoveImage?: () => void,
     onUseImage?: (url : string) => void,
     onBackgroundColorChange?: (color: string) => void,
-    onDeleteAll?: () => void
+    onDeleteAll?: () => void,
+    onHeadingClicked?: () => void
 }> = ({ 
     activeImage, workshopName, boardBackgroundColor, allImages, 
-    onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage, onBackgroundColorChange, onDeleteAll }) => {
+    onZoomToFit, onUpOne, onDownOne, onRemoveImage, onUseImage, onBackgroundColorChange, onDeleteAll, onHeadingClicked }) => {
 
   const classes = useStyles();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -176,7 +189,7 @@ const OptionBar: FunctionComponent<{
     }
     else 
     {
-        heading = <Typography variant="subtitle2">{workshopName}</Typography>;
+        heading = <Typography variant="h6">CollageIT</Typography>;
     }
   }
   else
@@ -188,8 +201,8 @@ const OptionBar: FunctionComponent<{
         <CssBaseline />
         <AppBar className={classes.bar} color="primary" elevation={16} position="fixed">
             <Toolbar>
-                <div className={classes.barTitle}>
-                    {heading}               
+                <div className={isBig ? classes.barTitleLarge : classes.barTitle} onClick={onHeadingClicked}>
+                    {heading}
                 </div>
                 <Divider className={classes.divider} orientation="vertical" flexItem />
                 {/* <IconButton edge="end" color="inherit" onClick={onZoomToFit}>
