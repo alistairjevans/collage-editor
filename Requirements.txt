@@ -64,3 +64,31 @@ Implementation
 - Put board in local storage (list of SVG images on the board, positions in 3D, and background colour).
 
 
+
+
+
+
+1. Safari on phones is better than Chrome, zooming out causes chrome to think you want to open a new tab
+    - Issue resolved. 
+
+2. Background colour palette doesn’t appear on phones
+    Need to add one.
+
+3. I think the “add box” icon would be better for the box, as it goes with the add image icon IN the draw
+    Change "image box icon" to "AddBox" from material UI list    
+
+4. Where it says ‘workshop’ it would be better if it just said CollageIT - although, is this supposed to be the workshop name? CollageIT would be fine I think? Could it have the logo there too perhaps?
+5. Your name and details? 
+6. Two things I noticed when using it, 1. when I open the box, but I don’t want an image, I can’t just close the box again and 2. If I’ve clicked an image but I want to get a new image out I instinctively click on the ‘workshop’ rectangle to get back to the box - is that something that could be done, rather than having to click on the background?
+    - Clicking on the pink box bar should close it.
+    - Clicking on the Logo/Name area should de-select an image.
+7. Did you pay for the domain? I need to give you the money for this?!
+8. Am ok to use it as is? and show some people for feedback etc?
+9. Would replacing or loading images into it be an easy process? Or does it require lots of work your end?
+10. I think zoom to fit would be helpful, but after using it, I’m not sure what the glue function would add - what are your thoughts on this, perhaps we could come back to this if feedback from participants warrants it?
+
+
+Sharing
+    - Hash fragment contains the name of the workshop folder.
+    - Without a hash fragment, show a 'default' folder.
+    - Watermark the 'default' workshop with some text.
