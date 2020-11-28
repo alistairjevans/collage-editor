@@ -1,5 +1,6 @@
-import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useCallback, RefForwardingComponent, useState, useEffect, useRef, forwardRef, useImperativeHandle, ReactNode } from 'react';
 import panzoom, { Transform, PanZoom } from 'panzoom';
+import Flatten from '@flatten-js/core';
 import { createUseStyles } from 'react-jss';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
@@ -8,14 +9,14 @@ const useStyles = createUseStyles({
         position: "fixed",
         left: 0,
         top: 0,
-        height: '100%',
+        height: 'calc(100% - 64px)',
         width: '100%',
         touchAction: 'none'
     }
 });
 
 export interface BoardMethods {
-    resetZoom(): void;
+    resetZoom(target?: Flatten.Box): void;
 }
 
 export interface BoardProps {
@@ -29,58 +30,38 @@ const sleep = (milliseconds: number) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
-async function resetZoom(panZoom: PanZoom, container: HTMLElement)
+async function resetZoom(panZoom: PanZoom, container: HTMLElement, target?: Flatten.Box)
 {
     const parent = container.parentElement!;
     const rectParent = parent.getBoundingClientRect();
-    const rectScene = container.getBoundingClientRect();
+  
+    const rectScene = target || new Flatten.Box(rectParent.left, rectParent.top, rectParent.right, rectParent.bottom);
 
-    const xys = panZoom.getTransform();
-    const originWidth = rectScene.width / xys.scale;
-    const originHeight = rectScene.height / xys.scale;
-    const zoomX = (rectParent.width - 20) / originWidth;
-    const zoomY = (rectParent.height - 20) / originHeight;
+    const padding = 60;
 
-    let targetScale = zoomX < zoomY ? zoomX : zoomY;
-
-    //when target scale is the same as currently, we reset back to 100%, so it acts as toggle.
-    if (Math.abs(targetScale - xys.scale) < 0.005) {
-        //reset to 100%
-        targetScale = 1;
-    }
-
-    const targetWidth = originWidth * xys.scale;
-    const targetHeight = originHeight * xys.scale;
-    const newX = targetWidth > rectParent.width ? -(targetWidth / 2) + rectParent.width / 2 : (rectParent.width / 2) - (targetWidth / 2);
-    const newY = targetHeight > rectParent.height ? -(targetHeight / 2) + rectParent.height / 2 : (rectParent.height / 2) - (targetHeight / 2);
+    // Expand the rectangle slightly to make it look nicer when we center to it.
+    rectScene.xmin -= padding;
+    rectScene.xmax += padding;
+    rectScene.ymin -= padding;
+    rectScene.ymax += padding;
 
     //we need to cancel current running animations
     panZoom.pause();
     panZoom.resume();
 
-    const xDiff = Math.abs(newX - xys.x);
-    const yDiff = Math.abs(newX - xys.x);
-    if (xDiff > 5 || yDiff > 5) {
-        //overything over 5px change will be animated
-        panZoom.moveBy(
-            newX - xys.x,
-            newY - xys.y,
-            true
-        );
-        await sleep(0.25);
-    } else {
-        panZoom.moveBy(
-            newX - xys.x,
-            newY - xys.y,
-            false
-        );
-    }
-
-    //correct way to zoom with center of graph as origin when scaled
-    panZoom.smoothZoomAbs(
-        xys.x + originWidth * xys.scale / 2,
-        xys.y + originHeight * xys.scale / 2,
-        targetScale,
+    panZoom.showRectangle({
+        left: rectScene.xmin, 
+        right: rectScene.xmax,
+        top: rectScene.ymin, 
+        bottom: rectScene.ymax,
+        height: rectScene.ymax - rectScene.ymin,
+        width: rectScene.xmax - rectScene.xmin
+    });
+    
+    panZoom.moveBy(
+        0,
+        0,
+        true
     );
 }
 
@@ -92,10 +73,10 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive 
     const [isPanZoomInitialised, setIsPanZoomInitialised] = useState(false);
 
     useImperativeHandle(ref, () => ({
-        resetZoom: () => {
+        resetZoom: (target: Flatten.Box) => {
             if (panZoomInstance.current && panningNode.current)
             {
-                resetZoom(panZoomInstance.current, panningNode.current);
+                resetZoom(panZoomInstance.current, panningNode.current, target);
             }
         }
     }));

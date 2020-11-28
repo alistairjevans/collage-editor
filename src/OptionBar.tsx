@@ -4,6 +4,7 @@ import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, GridList
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
 import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
+import CropFreeRoundedIcon from '@material-ui/icons/CropFreeRounded'
 import AddBox from '@material-ui/icons/AddBox';
 import PaletteIcon from '@material-ui/icons/Palette';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -204,10 +205,7 @@ const OptionBar: FunctionComponent<{
                 <div className={isBig ? classes.barTitleLarge : classes.barTitle} onClick={onHeadingClicked}>
                     {heading}
                 </div>
-                <Divider className={classes.divider} orientation="vertical" flexItem />
-                {/* <IconButton edge="end" color="inherit" onClick={onZoomToFit}>
-                    <CropFreeRoundedIcon />
-                </IconButton> */}
+                <Divider className={classes.divider} orientation="vertical" flexItem />               
                 <div className={classes.swappableSection}>
                     <div className={classes.swappableSet}>
                         <Slide direction="up" in={activeImage !== null} mountOnEnter unmountOnExit>
@@ -215,13 +213,13 @@ const OptionBar: FunctionComponent<{
                                 {/* <IconButton edge="end" color="inherit">
                                     <PlayForWorkIcon />
                                 </IconButton> */}
-                                <IconButton edge="end" color="inherit" onClick={onUpOne}>
+                                <IconButton edge="end" color="inherit" onClick={onUpOne} title="Move Image Up">
                                     <ArrowUpwardRoundedIcon />
                                 </IconButton>
-                                <IconButton edge="end" color="inherit" onClick={onDownOne}>
+                                <IconButton edge="end" color="inherit" onClick={onDownOne} title="Move Image Down">
                                     <ArrowDownwardRoundedIcon />
                                 </IconButton>                                
-                                <IconButton edge="end" color="inherit" onClick={onRemoveImage}>
+                                <IconButton edge="end" color="inherit" onClick={onRemoveImage} title="Remove Image">
                                     <DeleteIcon />
                                 </IconButton>
                             </div>
@@ -230,14 +228,17 @@ const OptionBar: FunctionComponent<{
                     <div className={classes.swappableSet}>
                         <Slide direction="down" in={activeImage === null} mountOnEnter unmountOnExit>
                             <div>
-                                <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)}>
+                                <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)} title="Add New Image">
                                     <AddBox />
                                 </IconButton>
-                                <IconButton edge="end" color="inherit" onClick={promptForColor}>
+                                <IconButton edge="end" color="inherit" onClick={promptForColor} title="Change Background Colour">
                                     <PaletteIcon />
                                 </IconButton>
                                 <input className={classes.colorPicker} type="color" ref={colorPicker} value={boardBackgroundColor ?? "#FFFFFF"} onChange={ev => onBackgroundColorChange?.(ev.target.value)}></input>
-                                <IconButton edge="end" color="inherit" onClick={() => setDeleteAllDialogOpen(true)}>
+                                <IconButton edge="end" color="inherit" onClick={onZoomToFit} title="Zoom To Fit">
+                                    <CropFreeRoundedIcon />
+                                </IconButton>
+                                <IconButton edge="end" color="inherit" onClick={() => setDeleteAllDialogOpen(true)} title="Remove All Images">
                                     <DeleteSweepIcon />
                                 </IconButton>
                             </div>

@@ -38,6 +38,13 @@ const useStyles = makeStyles(theme => ({
 
 function App() {
 
+  let workshop = "default";
+
+  if (window.location.hash)
+  {
+    workshop = window.location.hash.substring(1) || "default";
+  }
+
   const classes = useStyles();
   const processingCanvasEl = useRef<HTMLCanvasElement>(null);
   const boardMethods = useRef<BoardMethods>(null);
@@ -46,7 +53,7 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
   const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
-  const [workshopUrl] = useState(() => new URL("big-workshop/", window.location.href).href);
+  const [workshopUrl] = useState(() => new URL(workshop + "/", window.location.href).href);
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -171,8 +178,19 @@ function App() {
     // Find the item in the array and update it.
     var idx = imgData.findIndex(img => img && img.url === state.url);
 
+    var firstLoad = !imgData[idx]?.borderPoints;
+
     // Merge state, but keep the inUse flag.
     imgData[idx] = {...state, inUse: imgData[idx]!.inUse };
+
+    // Do we need to do our first zoom?
+    // If all in-use images have border points, we can zoom.
+    if (firstLoad && imgData.findIndex(img => img?.inUse && !img.borderPoints) === -1)
+    {
+      // All in-use images loaded.
+      zoomToFit();
+    }
+
   }, []);
 
   const handleImageEnter = (state: ImageState) => {    
@@ -378,6 +396,9 @@ function App() {
     {
       imgStates.splice(orderedIdx, 1);
       imgStates.push(currentState);
+
+      // Zoom to fit the new image.
+      zoomToFit();
     }
     else 
     {
@@ -427,6 +448,62 @@ function App() {
 
   }, [setInteractionTransform]);
 
+  const zoomToFit = () => {
+
+    var cachedImages = cachedImageStates.current;
+
+    let currentBox: Flatten.Box | null = null;
+    let isFirst = true;
+
+    for (let img of cachedImages || [])
+    {
+      if (img?.inUse)
+      {
+        let thisBox = img?.transformedPolygon.box;
+        if (isFirst)
+        {
+          currentBox = thisBox;
+          isFirst = false;
+        }
+        else 
+        {
+          let cloned: Flatten.Box = currentBox!.clone();
+
+          if (thisBox.xmin < cloned.xmin)
+          {
+            cloned.xmin = thisBox.xmin;
+          }
+
+          if (thisBox.ymin < cloned.ymin)
+          {
+            cloned.ymin = thisBox.ymin;
+          }
+
+          if (thisBox.xmax > cloned.xmax)
+          {
+            cloned.xmax = thisBox.xmax;
+          }
+
+          if (thisBox.ymax > cloned.ymax)
+          {
+            cloned.ymax = thisBox.ymax;
+          }
+
+          currentBox = cloned;
+        }
+      }
+    }
+
+    if (currentBox)
+    {
+      boardMethods.current?.resetZoom(currentBox);
+    }
+    else 
+    {      
+      boardMethods.current?.resetZoom();
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div className="App">      
@@ -447,7 +524,7 @@ function App() {
                 onMouseEnter={handleImageEnter}
                 onMouseLeave={handleImageLeave}
                 onMovingEnd={handleMoveEnd}
-                onSelect={handleSelect} />) )}              
+                onSelect={handleSelect} />) )}    
           <SelectionLayer hoverImage={hoverImageData} selectedImage={movingImageData ?? selectedImageData} key="_selection" />
         </Board>
         <InteractionLayer selectedImage={movingImageData ?? selectedImageData} currentBoardTransform={interactionTransform} onRotationChanged={rotationChanged} onRotationEnded={rotationEnded} />
@@ -455,13 +532,14 @@ function App() {
                   boardBackgroundColor={backgroundColor}
                   workshopName={workshopName}
                   allImages={workshopImages}
-                  onZoomToFit={() => boardMethods.current?.resetZoom()}
+                  onZoomToFit={() => zoomToFit()}
                   onUpOne={() => handleImageZOrderChange(selectedImageData!, forwardZOrder)}
                   onDownOne={() => handleImageZOrderChange(selectedImageData!, backZOrder)}
                   onRemoveImage={() => toggleUseImage(selectedImageData!.url, false)}
                   onUseImage={url => toggleUseImage(url, true)}
                   onBackgroundColorChange={color => setBackgroundColor(color)}    
                   onDeleteAll={deleteAll}
+                  onHeadingClicked={() => setSelectedImageData(null)}
                   />
         <canvas ref={processingCanvasEl} className={classes.computeCanvas} />
       </div>  
