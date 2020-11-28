@@ -23,7 +23,11 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
     },
 
     barSpreadButton: {
-        marginRight: '12px'
+        marginRight: '15px'
+    },
+
+    barSpreadButtonWide: {
+        marginRight: '35px'
     },
 
     barTitle: {
@@ -200,7 +204,7 @@ const OptionBar: FunctionComponent<{
   }
   else
   {
-    heading = <Typography variant="h6">CollageIT</Typography>;
+    heading = <Typography variant="h6">&nbsp;</Typography>;
   }
 
   return <React.Fragment>
@@ -218,13 +222,13 @@ const OptionBar: FunctionComponent<{
                                 {/* <IconButton edge="end" color="inherit">
                                     <PlayForWorkIcon />
                                 </IconButton> */}
-                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onUpOne} title="Move Image Up">
+                                <IconButton className={classes.barSpreadButtonWide} edge="end" color="inherit" onClick={onUpOne} title="Move Image Up">
                                     <ArrowUpwardRoundedIcon />
                                 </IconButton>
-                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onDownOne} title="Move Image Down">
+                                <IconButton className={classes.barSpreadButtonWide} edge="end" color="inherit" onClick={onDownOne} title="Move Image Down">
                                     <ArrowDownwardRoundedIcon />
                                 </IconButton>                                
-                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onRemoveImage} title="Remove Image">
+                                <IconButton className={classes.barSpreadButtonWide} edge="end" color="inherit" onClick={onRemoveImage} title="Remove Image">
                                     <DeleteIcon />
                                 </IconButton>
                             </div>
