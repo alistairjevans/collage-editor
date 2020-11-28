@@ -28,14 +28,5 @@ jobs:
     - name: Restore Packages
       run: npm install
 
-    # Build it
-    - name: Build
-      run: yarn build
-      
-    - name: Store Build Output
-      uses: actions/upload-artifact@v2
-      with:
-        # Artifact name
-        name: Site
-        # A file, directory or wildcard pattern that describes what to upload
-        path: build
+    - name: Build and Publish
+      run: npm run deploy
