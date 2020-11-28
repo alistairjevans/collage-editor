@@ -4,7 +4,7 @@ import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, GridList
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
 import AddPhotoAlternateIcon from '@material-ui/icons/AddPhotoAlternate';
-import PhotoAlbumIcon from '@material-ui/icons/PhotoAlbum';
+import AddBox from '@material-ui/icons/AddBox';
 import PaletteIcon from '@material-ui/icons/Palette';
 import DeleteIcon from '@material-ui/icons/Delete';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
@@ -218,7 +218,7 @@ const OptionBar: FunctionComponent<{
                         <Slide direction="down" in={activeImage === null} mountOnEnter unmountOnExit>
                             <div>
                                 <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)}>
-                                    <PhotoAlbumIcon />
+                                    <AddBox />
                                 </IconButton>
                                 <IconButton edge="end" color="inherit" onClick={promptForColor}>
                                     <PaletteIcon />
@@ -234,8 +234,8 @@ const OptionBar: FunctionComponent<{
             </Toolbar>
         </AppBar>        
         <SwipeableDrawer open={drawerOpen}  anchor="bottom" onOpen={toggleDrawer(true)} onClose={toggleDrawer(false)}>
-            <AppBar position="static" color="primary">
-                <Toolbar><Typography variant="h4"><PhotoAlbumIcon /> Box</Typography></Toolbar>
+            <AppBar position="static" color="primary" onClick={toggleDrawer(false)}>
+                <Toolbar><Typography variant="h4"><AddBox /> Box</Typography></Toolbar>
             </AppBar>
             <div className={classes.boxDrawer}>
                 <GridList className={classes.boxGrid} cellHeight={160} cols={isBig ? 6 : 2} spacing={10}>
