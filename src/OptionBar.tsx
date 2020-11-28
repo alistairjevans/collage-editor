@@ -22,8 +22,13 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
         overflow: 'hidden'
     },
 
+    barSpreadButton: {
+        marginRight: '12px'
+    },
+
     barTitle: {
-        paddingRight: '10px',
+        paddingRight: '0px',
+        marginLeft: '3px',
         paddingLeft: '3em',
         background: "url('/logo192.png')",
         backgroundSize: "contain",
@@ -190,7 +195,7 @@ const OptionBar: FunctionComponent<{
     }
     else 
     {
-        heading = <Typography variant="h6">CollageIT</Typography>;
+        heading = <Typography variant="h6">&nbsp;</Typography>;
     }
   }
   else
@@ -213,13 +218,13 @@ const OptionBar: FunctionComponent<{
                                 {/* <IconButton edge="end" color="inherit">
                                     <PlayForWorkIcon />
                                 </IconButton> */}
-                                <IconButton edge="end" color="inherit" onClick={onUpOne} title="Move Image Up">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onUpOne} title="Move Image Up">
                                     <ArrowUpwardRoundedIcon />
                                 </IconButton>
-                                <IconButton edge="end" color="inherit" onClick={onDownOne} title="Move Image Down">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onDownOne} title="Move Image Down">
                                     <ArrowDownwardRoundedIcon />
                                 </IconButton>                                
-                                <IconButton edge="end" color="inherit" onClick={onRemoveImage} title="Remove Image">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onRemoveImage} title="Remove Image">
                                     <DeleteIcon />
                                 </IconButton>
                             </div>
@@ -228,17 +233,17 @@ const OptionBar: FunctionComponent<{
                     <div className={classes.swappableSet}>
                         <Slide direction="down" in={activeImage === null} mountOnEnter unmountOnExit>
                             <div>
-                                <IconButton edge="end" color="inherit" onClick={toggleDrawer(true)} title="Add New Image">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={toggleDrawer(true)} title="Add New Image">
                                     <AddBox />
                                 </IconButton>
-                                <IconButton edge="end" color="inherit" onClick={promptForColor} title="Change Background Colour">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={promptForColor} title="Change Background Colour">
                                     <PaletteIcon />
                                 </IconButton>
                                 <input className={classes.colorPicker} type="color" ref={colorPicker} value={boardBackgroundColor ?? "#FFFFFF"} onChange={ev => onBackgroundColorChange?.(ev.target.value)}></input>
-                                <IconButton edge="end" color="inherit" onClick={onZoomToFit} title="Zoom To Fit">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onZoomToFit} title="Zoom To Fit">
                                     <CropFreeRoundedIcon />
                                 </IconButton>
-                                <IconButton edge="end" color="inherit" onClick={() => setDeleteAllDialogOpen(true)} title="Remove All Images">
+                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={() => setDeleteAllDialogOpen(true)} title="Remove All Images">
                                     <DeleteSweepIcon />
                                 </IconButton>
                             </div>

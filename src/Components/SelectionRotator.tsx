@@ -13,7 +13,8 @@ const useStyles = makeStyles(({ palette } : Theme) => ({
     position: 'absolute',
     cursor: 'grab',
     pointerEvents: 'all',
-    touchAction: 'none'
+    touchAction: 'none',
+    filter: "contrast(0.5)"
   },
 
 }));

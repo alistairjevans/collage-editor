@@ -3,6 +3,7 @@ import panzoom, { Transform, PanZoom } from 'panzoom';
 import Flatten from '@flatten-js/core';
 import { createUseStyles } from 'react-jss';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
+import watermark from '../watermark.png';
 
 const useStyles = createUseStyles({
     board: {
@@ -12,6 +13,17 @@ const useStyles = createUseStyles({
         height: 'calc(100% - 56px)',
         width: '100%',
         touchAction: 'none'
+    },
+
+    boardWatermark: {
+        "&:before": {
+            content: '""',
+            backgroundImage: `url(${watermark})`,
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            filter: "contrast(0.5)"
+        }
     },
 
     '@media (min-width: 600px)': {
@@ -30,6 +42,7 @@ export interface BoardProps {
         backgroundColor?: string;
         onTransformChanged?: (transform: Transform) => void;
         onBackgroundClicked?: () => void;
+        showWaterMark: boolean;
         children?: React.ReactNode;
 }
 
@@ -68,7 +81,14 @@ async function resetZoom(panZoom: PanZoom, container: HTMLElement, target?: Flat
     );
 }
 
-const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive = true, backgroundColor = "#ffffff", onTransformChanged, onBackgroundClicked, children }, ref) =>
+const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ 
+    motionActive = true, 
+    backgroundColor = "#ffffff",
+    onTransformChanged, 
+    onBackgroundClicked, 
+    children,
+    showWaterMark
+}, ref) =>
 {
     const panZoomInstance = useRef<PanZoom | null>(null);
     const mouseDownTransform = useRef<Transform | null>(null);
@@ -161,7 +181,7 @@ const Board: RefForwardingComponent<BoardMethods, BoardProps> = ({ motionActive 
         boardStyle.backgroundColor = backgroundColor;
     }
 
-    return <div className={classes.board} style={boardStyle} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
+    return <div className={`${classes.board} ${showWaterMark ? classes.boardWatermark : ''}`} style={boardStyle} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} onTouchEnd={handleMouseUp}>
         <div ref={pannedRef}>
             {children}
         </div>

@@ -53,7 +53,7 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [workshopImages, setWorkshopImages] = useState<AvailableWorkshopImage[]>([]);
   const [orderedImages, setOrderedImages] = useState<AvailableWorkshopImage[]>([]);
-  const [workshopUrl] = useState(() => new URL(workshop + "/", window.location.href).href);
+  const [workshopUrl] = useState(new URL(workshop + "/", window.location.href).href);
   const [boardMotionActive, setBoardMotionActive] = useState(true);
   const [hoverImageData, setHoverImageData] = useState<ImageState | null>(null);
   const [selectedImageData, setSelectedImageData] = useState<ImageState | null>(null);
@@ -121,6 +121,16 @@ function App() {
     window.addEventListener("orientationchange", callback);
 
     return () => window.removeEventListener("orientationchange", callback);
+  }, []);
+
+  useEffect(() => {
+
+    window.onhashchange = function() {
+      // do stuff
+      window.location.reload();
+    };
+    
+    return () => { window.onhashchange = null };
   }, []);
 
   useEffect(() => {
@@ -514,7 +524,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <div className="App">      
-        <Board ref={boardMethods} backgroundColor={backgroundColor} motionActive={boardMotionActive} onTransformChanged={transformChanged} onBackgroundClicked={() => setSelectedImageData(null)}>
+        <Board ref={boardMethods} showWaterMark={workshop.toLowerCase() === 'default'} backgroundColor={backgroundColor} motionActive={boardMotionActive} onTransformChanged={transformChanged} onBackgroundClicked={() => setSelectedImageData(null)}>
           {orderedImages.filter(img => img.inUse).map(img => 
             (<Image 
                 canvas={processingCanvasEl.current!} 
