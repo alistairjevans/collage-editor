@@ -21,6 +21,7 @@ const useStyles = createUseStyles({
             backgroundImage: `url(${watermark})`,
             width: "100%",
             height: "100%",
+            backgroundSize: "contain",
             position: "absolute",
             filter: "contrast(0.5)"
         }
@@ -29,6 +30,12 @@ const useStyles = createUseStyles({
     '@media (min-width: 600px)': {
         board: {
             height: 'calc(100% - 64px)',
+        },
+
+        boardWatermark: {
+            "&:before": {                
+                backgroundSize: "auto",
+            }
         }
     }
 });
