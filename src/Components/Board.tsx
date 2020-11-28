@@ -9,9 +9,15 @@ const useStyles = createUseStyles({
         position: "fixed",
         left: 0,
         top: 0,
-        height: 'calc(100% - 64px)',
+        height: 'calc(100% - 56px)',
         width: '100%',
         touchAction: 'none'
+    },
+
+    '@media (min-width: 600px)': {
+        board: {
+            height: 'calc(100% - 64px)',
+        }
     }
 });
 
@@ -25,9 +31,6 @@ export interface BoardProps {
         onTransformChanged?: (transform: Transform) => void;
         onBackgroundClicked?: () => void;
         children?: React.ReactNode;
-}
-const sleep = (milliseconds: number) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
 async function resetZoom(panZoom: PanZoom, container: HTMLElement, target?: Flatten.Box)

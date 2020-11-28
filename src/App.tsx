@@ -60,6 +60,69 @@ function App() {
   const [movingImageData, setMovingImageData] = useState<ImageState | null>(null);
   const [interactionTransform, setInteractionTransform] = useState<Transform>({ x: 0, y: 0, scale: 1.0 });
 
+  const zoomToFit = () => {
+
+    var cachedImages = cachedImageStates.current;
+
+    let currentBox: Flatten.Box | null = null;
+    let isFirst = true;
+
+    for (let img of cachedImages || [])
+    {
+      if (img?.inUse)
+      {
+        let thisBox = img?.transformedPolygon.box;
+        if (isFirst)
+        {
+          currentBox = thisBox;
+          isFirst = false;
+        }
+        else 
+        {
+          let cloned: Flatten.Box = currentBox!.clone();
+
+          if (thisBox.xmin < cloned.xmin)
+          {
+            cloned.xmin = thisBox.xmin;
+          }
+
+          if (thisBox.ymin < cloned.ymin)
+          {
+            cloned.ymin = thisBox.ymin;
+          }
+
+          if (thisBox.xmax > cloned.xmax)
+          {
+            cloned.xmax = thisBox.xmax;
+          }
+
+          if (thisBox.ymax > cloned.ymax)
+          {
+            cloned.ymax = thisBox.ymax;
+          }
+
+          currentBox = cloned;
+        }
+      }
+    }
+
+    if (currentBox)
+    {
+      boardMethods.current?.resetZoom(currentBox);
+    }
+    else 
+    {      
+      boardMethods.current?.resetZoom();
+    }
+  };
+
+  useEffect(() => {    
+    let callback = () => setTimeout(zoomToFit, 100);
+    window.addEventListener("orientationchange", callback);
+
+    return () => window.removeEventListener("orientationchange", callback);
+  }, []);
+
   useEffect(() => {
     const workshopLoad = async () => {
       
@@ -447,62 +510,6 @@ function App() {
     setInteractionTransform(transform);
 
   }, [setInteractionTransform]);
-
-  const zoomToFit = () => {
-
-    var cachedImages = cachedImageStates.current;
-
-    let currentBox: Flatten.Box | null = null;
-    let isFirst = true;
-
-    for (let img of cachedImages || [])
-    {
-      if (img?.inUse)
-      {
-        let thisBox = img?.transformedPolygon.box;
-        if (isFirst)
-        {
-          currentBox = thisBox;
-          isFirst = false;
-        }
-        else 
-        {
-          let cloned: Flatten.Box = currentBox!.clone();
-
-          if (thisBox.xmin < cloned.xmin)
-          {
-            cloned.xmin = thisBox.xmin;
-          }
-
-          if (thisBox.ymin < cloned.ymin)
-          {
-            cloned.ymin = thisBox.ymin;
-          }
-
-          if (thisBox.xmax > cloned.xmax)
-          {
-            cloned.xmax = thisBox.xmax;
-          }
-
-          if (thisBox.ymax > cloned.ymax)
-          {
-            cloned.ymax = thisBox.ymax;
-          }
-
-          currentBox = cloned;
-        }
-      }
-    }
-
-    if (currentBox)
-    {
-      boardMethods.current?.resetZoom(currentBox);
-    }
-    else 
-    {      
-      boardMethods.current?.resetZoom();
-    }
-  };
 
   return (
     <ThemeProvider theme={theme}>
