@@ -2,6 +2,7 @@
     "name": "Test1",
     "images": [
         "image101.png",
-        "horse.png"
+        "horse.png",
+        "parrot.png"
     ]
 }
