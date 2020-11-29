@@ -169,12 +169,12 @@ const OptionBar: FunctionComponent<{
     if (open)
     {
         setDisplayColorPicker(false);
-        window.history.pushState({ drawerOpen: true }, "Add Image");
+        window.history.pushState({ imageDrawer: true }, "Add Image");
     }
-    else if (window.history.state?.drawerOpen) 
+    else if (window.history.state?.imageDrawer) 
     {
         // Go back to the state before we opened the drawer.
-        window.history.back();        
+        window.history.back();
     }
 
     setDrawerOpen(open);
@@ -184,12 +184,22 @@ const OptionBar: FunctionComponent<{
   {
     window.onpopstate = (ev: PopStateEvent) => {
         
-        // Close the drawer.
-        setDrawerOpen(false);
-        
-        ev.preventDefault();
+        if (drawerOpen)
+        {
+            // Close the drawer.
+            setDrawerOpen(false);            
+            ev.preventDefault();
+        }
+        else if (displayColorPicker)
+        {
+            setDisplayColorPicker(false);            
+            ev.preventDefault();
+        }        
     };
-  }, []);
+
+    return () => { window.onpopstate = null };
+    
+  }, [drawerOpen, displayColorPicker]);
   
   useEffect(() => {
 
@@ -204,6 +214,27 @@ const OptionBar: FunctionComponent<{
     onUseImage?.(url);
     setDrawerOpen(false);
   }
+
+  const toggleDisplayColorPicker = () => {
+
+    if (displayColorPicker)
+    {
+        if (window.history.state?.colorPicker) 
+        {
+            // Go back to the state before we opened the drawer.
+            window.history.back();
+        }
+
+        setDisplayColorPicker(false);
+    }
+    else 
+    {
+        window.history.pushState({ colorPicker: true }, "Choose Color");
+
+        setDisplayColorPicker(true);
+    }
+
+  };
 
   const handleDeleteDialogClose = (confirmed: boolean) => {
     
@@ -270,7 +301,7 @@ return <React.Fragment>
                                 <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={toggleDrawer(true)} title="Add New Image">
                                     <AddBox />
                                 </IconButton>
-                                <IconButton className={`${classes.barToggleButton} ${displayColorPicker ? classes.barToggleButtonEnabled : null}`} edge="end" color="inherit" onClick={() => setDisplayColorPicker(!displayColorPicker)} title="Change Background Colour">
+                                <IconButton className={`${classes.barToggleButton} ${displayColorPicker ? classes.barToggleButtonEnabled : null}`} edge="end" color="inherit" onClick={toggleDisplayColorPicker} title="Change Background Colour">
                                     <PaletteIcon />
                                 </IconButton>
                                 <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onZoomToFit} title="Zoom To Fit">
