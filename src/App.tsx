@@ -69,7 +69,8 @@ function App() {
 
     for (let img of cachedImages || [])
     {
-      if (img?.inUse)
+      // Consider the image if it's in use, and it has been loaded.
+      if (img?.inUse && img.borderPoints)
       {
         let thisBox = img?.transformedPolygon.box;
         if (isFirst)
@@ -184,6 +185,7 @@ function App() {
               if (savedImgIdx !== -1)
               {
                 visitedImages[savedImgIdx] = true;
+                img.inUse = orderedImages[savedImgIdx].inUse;
               }
               else
               {

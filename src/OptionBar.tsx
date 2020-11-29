@@ -1,5 +1,6 @@
-import React, { FunctionComponent, useState, useRef, useEffect } from 'react';
+import React, { FunctionComponent, useState, useEffect } from 'react';
 import { ImageState, AvailableWorkshopImage } from './CommonTypes';
+import FloatingColorPicker from './Components/FloatingColorPicker';
 import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
 import ArrowDownwardRoundedIcon from '@material-ui/icons/ArrowDownwardRounded';
@@ -28,6 +29,14 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
 
     barSpreadButtonWide: {
         marginRight: '35px'
+    },
+    
+    barToggleButton: {
+        marginRight: '15px',
+    },
+
+    barToggleButtonEnabled: {
+        opacity: '50%'
     },
 
     barTitle: {
@@ -119,13 +128,7 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
         top: 0,
         padding: '10px',
         userSelect: 'none'
-    },
-
-    colorPicker: {
-        visibility: 'hidden',
-        width: '0px'
     }
-
 }));
 
 const OptionBar: FunctionComponent<{ 
@@ -150,7 +153,7 @@ const OptionBar: FunctionComponent<{
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const theme = useTheme();
   const isBig = useMediaQuery(theme.breakpoints.up("sm"));
-  const colorPicker = useRef<HTMLInputElement>(null);
+  const [displayColorPicker, setDisplayColorPicker] = useState(false); 
 
   const toggleDrawer = (open: boolean) => (
     event: React.KeyboardEvent | React.MouseEvent,
@@ -165,11 +168,13 @@ const OptionBar: FunctionComponent<{
 
     if (open)
     {
+        setDisplayColorPicker(false);
         window.history.pushState({ drawerOpen: true }, "Add Image");
     }
-    else {
+    else if (window.history.state?.drawerOpen) 
+    {
         // Go back to the state before we opened the drawer.
-        window.history.back();
+        window.history.back();        
     }
 
     setDrawerOpen(open);
@@ -182,16 +187,22 @@ const OptionBar: FunctionComponent<{
         // Close the drawer.
         setDrawerOpen(false);
         
+        ev.preventDefault();
     };
-  }, [setDrawerOpen]);
+  }, []);
+  
+  useEffect(() => {
+
+    if (activeImage !== null)
+    {
+        setDisplayColorPicker(false);
+    }
+
+  }, [activeImage]);
 
   const setImageStateAndCloseDrawer = (url: string) => {
     onUseImage?.(url);
     setDrawerOpen(false);
-  }
-
-  const promptForColor = () => {
-    colorPicker.current?.click();
   }
 
   const handleDeleteDialogClose = (confirmed: boolean) => {
@@ -226,7 +237,7 @@ const OptionBar: FunctionComponent<{
     heading = <Typography variant="h6">&nbsp;</Typography>;
   }
 
-  return <React.Fragment>
+return <React.Fragment>
         <CssBaseline />
         <AppBar className={classes.bar} color="primary" elevation={16} position="fixed">
             <Toolbar>
@@ -259,10 +270,9 @@ const OptionBar: FunctionComponent<{
                                 <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={toggleDrawer(true)} title="Add New Image">
                                     <AddBox />
                                 </IconButton>
-                                <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={promptForColor} title="Change Background Colour">
+                                <IconButton className={`${classes.barToggleButton} ${displayColorPicker ? classes.barToggleButtonEnabled : null}`} edge="end" color="inherit" onClick={() => setDisplayColorPicker(!displayColorPicker)} title="Change Background Colour">
                                     <PaletteIcon />
                                 </IconButton>
-                                <input className={classes.colorPicker} type="color" ref={colorPicker} value={boardBackgroundColor ?? "#FFFFFF"} onChange={ev => onBackgroundColorChange?.(ev.target.value)}></input>
                                 <IconButton className={classes.barSpreadButton} edge="end" color="inherit" onClick={onZoomToFit} title="Zoom To Fit">
                                     <CropFreeRoundedIcon />
                                 </IconButton>
@@ -316,6 +326,7 @@ const OptionBar: FunctionComponent<{
             </Button>
           </DialogActions>
         </Dialog>
+        <FloatingColorPicker display={displayColorPicker} initialColor={boardBackgroundColor} onColorChange={onBackgroundColorChange}></FloatingColorPicker>
         
   </React.Fragment> ;
 
