@@ -26,7 +26,7 @@ jobs:
     - name: Restore Packages
       run: npm install
 
-    - name: Build and Publish
+    - name: Build
       run: npm run build
 
     - name: Deploy 

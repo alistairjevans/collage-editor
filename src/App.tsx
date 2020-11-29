@@ -174,21 +174,31 @@ function App() {
             }));
 
             // Empty the ordered images set.
-            orderedImages = [];
+            orderedImages = savedImages;
+
+            let visitedImages = savedImages.map(() => false);
 
             // Make sure we have all the images.
             loadedImages.forEach(img => {
-              const savedImg = savedImages.find(v => v.url === img.url);
-              if (savedImg)
+              const savedImgIdx = orderedImages.findIndex(v => v.url === img.url);
+              if (savedImgIdx !== -1)
               {
-                // Add the image.
-                orderedImages.push(savedImg);
-                img.inUse = savedImg.inUse;
+                visitedImages[savedImgIdx] = true;
               }
-              else 
+              else
               {
                 orderedImages.push({ url: img.url, inUse: false, initialX: 0, initialY: 0, rotate: 0 });
               }
+            });
+
+            // Now, any 'visited images' that are false are images that have been removed.
+            visitedImages.forEach((wasVisited, idx) => {
+
+              if (!wasVisited)
+              {
+                orderedImages.splice(idx, 1);
+              }
+
             });
           }
         }
@@ -219,7 +229,7 @@ function App() {
 
   const saveState = useCallback(() =>
   {
-    if (!workshopUrl || !cachedImageStates.current)
+    if (!workshopUrl || !orderedImages || !cachedImageStates.current)
     {
       return;
     }
@@ -227,11 +237,23 @@ function App() {
     // Save to local storage.
     const data : SavedWorkshopState = { 
       backgroundColor,
-      images: cachedImageStates.current!.map((img) => ({ url: img!.url, inUse: img!.inUse, x: img!.boundingRect.left, y: img!.boundingRect.top, rotate: img!.rotate }))
+      images: orderedImages.map((img) => {
+
+        // Find the item in the cache so we definitely have the latest rotate and bounding rectangle.
+        var cacheItem = cachedImageStates.current?.find(cache => cache && cache.url === img.url);
+
+        if (cacheItem)
+        {
+          return { url: img!.url, inUse: img!.inUse, x: cacheItem.boundingRect.left, y: cacheItem.boundingRect.top, rotate: cacheItem.rotate };
+        }
+        else {
+          return { url: img!.url, inUse: img!.inUse, x: img.initialX, y: img.initialY, rotate: img.rotate };
+        }
+      })
     };
 
     localStorage.setItem(`data_${workshopUrl}`, JSON.stringify(data));
-  }, [backgroundColor, workshopUrl]);
+  }, [backgroundColor, orderedImages, workshopUrl]);
 
   useEffect(() => {
 
@@ -470,8 +492,12 @@ function App() {
       imgStates.splice(orderedIdx, 1);
       imgStates.push(currentState);
 
-      // Zoom to fit the new image.
-      zoomToFit();
+      if (currentState?.borderPoints)
+      {
+        // We already have calculated sizing information for the image.
+        // Zoom to fit the new image.
+        zoomToFit();
+      }
     }
     else 
     {
