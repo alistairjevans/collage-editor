@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState, useRef } from 'react';
+import React, { FunctionComponent, useState, useRef, useEffect } from 'react';
 import { ImageState, AvailableWorkshopImage } from './CommonTypes';
 import { AppBar, Toolbar, Typography, IconButton, CssBaseline, Divider, GridList, GridListTile, SwipeableDrawer, Theme, Box, GridListTileBar, Slide, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
 import ArrowUpwardRoundedIcon from '@material-ui/icons/ArrowUpwardRounded';
@@ -163,8 +163,27 @@ const OptionBar: FunctionComponent<{
       return;
     }
 
+    if (open)
+    {
+        window.history.pushState({ drawerOpen: true }, "Add Image");
+    }
+    else {
+        // Go back to the state before we opened the drawer.
+        window.history.back();
+    }
+
     setDrawerOpen(open);
   };
+
+  useEffect(() => 
+  {
+    window.onpopstate = (ev: PopStateEvent) => {
+        
+        // Close the drawer.
+        setDrawerOpen(false);
+        
+    };
+  }, [setDrawerOpen]);
 
   const setImageStateAndCloseDrawer = (url: string) => {
     onUseImage?.(url);
